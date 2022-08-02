@@ -1,38 +1,89 @@
-﻿using System;
+﻿using WallpaperGenerator.DTO;
+using WallpaperGenerator.Helpers;
+using WallpaperGenerator.Services;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace FractalGenerator.BackgroundDrawers
+namespace WallpaperGenerator.Services.BackgroundDrawers
 {
     public class PrimeFractalDrawer : IDrawer
     {
         private Bitmap _bitmap;
+        /// <summary>
+        /// image total width
+        /// </summary>
         private readonly int _width;
+        /// <summary>
+        /// image total height
+        /// </summary>
         private readonly int _height;
+        /// <summary>
+        /// size of minimal pattern square to color in pixels
+        /// </summary>
+        private int _brushSize;
+
+        /// <summary>
+        /// pixel Y index where patterns start (included)
+        /// </summary>
         private int _patternStartY;
+        /// <summary>
+        /// pixel Y index where patterns end (included)
+        /// </summary>
         private int _patternEndY;
+
+        /// <summary>
+        /// how many patterns in width
+        /// </summary>
         private int PatternalWidth => _width / _brushSize;
         /// <summary>
-        /// height of bitmap area with pattern 
+        /// how many patterns in height
         /// </summary>
-        private int PatternalHeight => (_patternEndY - _patternStartY) / _brushSize;
+        private int PatternalHeight => (_patternEndY - _patternStartY + 1) / _brushSize;
 
-        private int x;
-        private int y;
         /// <summary>
-        /// x position of pattern square
+        /// current pixel X position
+        /// </summary>
+        private int x;
+        /// <summary>
+        /// current pixel Y position
+        /// </summary>
+        private int y;
+
+        /// <summary>
+        /// X position of pattern
         /// </summary>
         private int PatternalX => x / _brushSize;
         /// <summary>
-        /// y position of pattern square
+        /// Y position of pattern. -1 if out of pattern
         /// </summary>
-        private int PatternalY => y / _brushSize;
+        private int PatternalY {
+            get
+            {
+                if (y < TopOffset)
+                    return -1;
 
-        private int CountOfPatternsToColor => _width * (_patternEndY-_patternStartY) / (_brushSize * _brushSize);
+                int result = (y - TopOffset) / _brushSize;
+                if (result > PatternalHeight)
+                    return -1;
+
+                return result;
+            }
+        } 
+
+        /// <summary>
+        /// count of pixels offsetted from the top of the image
+        /// </summary>
+        private int TopOffset => _patternStartY;
+
+        /// <summary>
+        /// total count of patterns in image
+        /// </summary>
+        private int CountOfPatternsToColor => PatternalWidth * PatternalHeight;
+
         private Direction _direction;
         private CornerPosition _startPosition;
-        private int _brushSize;
 
         private enum Direction
         {
@@ -53,110 +104,68 @@ namespace FractalGenerator.BackgroundDrawers
         private Color _fillInsideColor;
         private Color _fillOutsideColor;
 
-        public PrimeFractalDrawer(int height, int width, int brushSize = 0)
+        public PrimeFractalDrawer(PrimeFractalConfigDTO config)
         {
-            _height = height;
-            _width = width;
-            SetPattern(height, width, brushSize);
+            _height = config.Height.Value;
+            _width = config.Width.Value;
+            _brushSize = config.BrushSize;
 
-            _fillOutsideColor = Color.Black;
-            _fillInsideColor = Color.White;
-        }
+            if (_width % _brushSize != 0)
+                throw new Exception("Width must can be divided by brushSize without remainder");
+            if (_brushSize > _width || _brushSize > _height)
+                throw new Exception("Brush size is bigger than picture area");
 
-        /// <param name="height">total height of bitmap</param>
-        /// <param name="width">total width of bitmap</param>
-        /// <param name="fillOutsideColor">color of outside fill</param>
-        /// <param name="fillInsideColor">color of inside fill</param>
-        /// <param name="brushSize">the size of each minimal colored square</param>
-        /// <param name="startPosition">corner to start from. Actually changing corner flips an image</param>
-        public PrimeFractalDrawer(int height, int width,
-            Color? fillOutsideColor = null, Color? fillInsideColor = null,
-            int brushSize = 0,
-            CornerPosition startPosition = CornerPosition.LeftUp)
-        {
-            _height = height;
-            _width = width;
-            SetPattern(height, width, brushSize);
-
-            _fillOutsideColor = fillOutsideColor ?? Color.Black;
-            _fillInsideColor = fillInsideColor ?? Color.White;
-
-            _startPosition = startPosition;
-        }
-
-        /// <param name="height">total height of bitmap</param>
-        /// <param name="width">total width of bitmap</param>
-        /// <param name="fillOutsideColor">hex color of outside fill</param>
-        /// <param name="fillInsideColor">hex color of inside fill</param>
-        /// <param name="brushSize">the size of each minimal colored square</param>
-        /// <param name="startPosition">corner to start from. Actually changing corner flips an image</param>
-        public PrimeFractalDrawer(int height, int width,
-            string fillOutsideColor = null, string fillInsideColor = null,
-            int brushSize = 0,
-            CornerPosition startPosition = CornerPosition.LeftUp)
-        {
-            _height = height;
-            _width = width;
-            SetPattern(height, width, brushSize);
-
-            ColorConverter converter = new ColorConverter();
-            _fillOutsideColor = !string.IsNullOrEmpty(fillOutsideColor) ? 
-                (Color)converter.ConvertFromString(fillOutsideColor) : Color.Black;
-            _fillInsideColor = !string.IsNullOrEmpty(fillInsideColor) ?
-                (Color)converter.ConvertFromString(fillInsideColor) : Color.White;
-
-            _startPosition = startPosition;
+            _fillInsideColor = config.FillInsideColor;
+            _fillOutsideColor = config.FillOutsideColor;
+            _startPosition = config.StartPosition;
+            SetPattern();
         }
 
         public string GetConfig()
         {
-            return $"{_height}, {_width}, {_fillOutsideColor}, {_fillInsideColor}, {_brushSize}, {_startPosition}";
+            return $"{GetType().Name} {_height}, {_width}, {_fillOutsideColor.ToHex()}, {_fillInsideColor.ToHex()}, {_brushSize}, {_startPosition}";
         }
 
-        private void SetPattern(int height, int width, int brushSize)
+        /// <summary>
+        /// sets brush size and determines patterned area
+        /// </summary>
+        private void SetPattern()
         {
-            if (brushSize == default)
+            if (_brushSize == default)
             {
-                _brushSize = GCD(width, height);
+                _brushSize = MathExtension.GCD(_width, _height);
                 _patternStartY = 0;
-                _patternEndY = height - 1;
+                _patternEndY = _height - 1;
             }
-            else if (GCD(width, height) != brushSize)
+            else if (MathExtension.GCD(_width, _height) != _brushSize)
             {
                 int size;
-                int newHeight = height;
+                int newHeight = _height;
                 do
                 {
-                    size = GCD(width, --newHeight);
+                    size = MathExtension.GCD(_width, newHeight);
+                    newHeight--;
                     if (newHeight <= 0)
-                        throw new Exception("unable to fit such width height and brush size");
+                        throw new Exception("unable to fit such width, height and brush size");
                 }
-                while (size != brushSize);
-                _brushSize = brushSize;
-                _patternStartY = (height - newHeight) / 2;
-                _patternEndY = height - _patternStartY;
+                while (size != _brushSize);
+
+                int difference = (_height - ++newHeight);
+                // that would give a bigger space to bottom edge
+                _patternStartY = difference / 2;
+                _patternEndY = _height - 1 - (int)Math.Ceiling(difference / 2f);
             }
             else
             {
-                _brushSize = brushSize;
                 _patternStartY = 0;
-                _patternEndY = height - 1;
+                _patternEndY = _height - 1;
             }
         }
 
-        private int GCD(int num1, int num2)
-        {
-            int gcd = 0;
-            for (int i = 1; i < (num2 * num1 + 1); i++)
-            {
-                if (num1 % i == 0 && num2 % i == 0)
-                {
-                    gcd = i;
-                }
-            }
-            return gcd;
-        }
-
+        /// <summary>
+        /// sets start coordinates to color from
+        /// </summary>
+        /// <param name="newStartPosition"></param>
         public void SetStartPosition(CornerPosition newStartPosition)
         {
             _startPosition = newStartPosition;
@@ -169,18 +178,18 @@ namespace FractalGenerator.BackgroundDrawers
                     _direction = Direction.ToRightDown;
                     break;
                 case CornerPosition.RightUp:
-                    x = _width - 1;
+                    x = _width - _brushSize;
                     y = _patternStartY;
                     _direction = Direction.ToLeftDown;
                     break;
                 case CornerPosition.RightDown:
-                    x = _width - 1;
-                    y = _patternEndY - 1;
+                    x = _width - _brushSize;
+                    y = _patternEndY - _brushSize + 1;
                     _direction = Direction.ToLeftUp;
                     break;
                 case CornerPosition.LeftDown:
                     x = 0;
-                    y = _patternEndY - 1;
+                    y = _patternEndY - _brushSize + 1;
                     _direction = Direction.ToRightUp;
                     break;
             }
@@ -191,18 +200,12 @@ namespace FractalGenerator.BackgroundDrawers
             _bitmap = new Bitmap(_width, _height);
             SetStartPosition(_startPosition);
             
-            try
+            // draw patterned area
+            for (int i = 0; i < CountOfPatternsToColor; i++)
             {
-                for (int i = 0; i < CountOfPatternsToColor; i++)
-                {
-                    DrawInternal();
-                }
+                DrawInternal();
             }
-            catch (ArgumentOutOfRangeException ex)
-            {
-                _bitmap.Save("failed_try.png");
-                throw ex;
-            }
+            // draw top and bottom free space
             DrawBackground();
 
             var result = new Bitmap(_bitmap);
@@ -212,21 +215,13 @@ namespace FractalGenerator.BackgroundDrawers
 
         private void DrawInternal()
         {
-            //color one brush pattern
-            for (int i = x; i < x + _brushSize; i++)
-            {
-                for (int j = y; j < y + _brushSize; j++)
-                {
-                    _bitmap.SetPixel(i, j, _currentColor);
-                }
-            }
-            //_bitmap.Save("temp.png");
+            ColorCurrentPattern();
 
-            //get next coordinate to color
             try
             {
                 do
                 {
+                    //_bitmap.Save($"error {GetConfig()}.png");
                     SetNextCoordinate();
                 }
                 while (_bitmap.GetPixel(x, y).A != 0);
@@ -236,18 +231,33 @@ namespace FractalGenerator.BackgroundDrawers
                 return;
             }
 
-            //switch next color
-            if (_currentColor == _fillInsideColor)
-                _currentColor = _fillOutsideColor;
-            else
-                _currentColor = _fillInsideColor;
+            SwitchColor();
+        }
+        /// <summary>
+        /// colors one brush pattern. Start X and Y is left-up corner of pattern
+        /// </summary>
+        private void ColorCurrentPattern()
+        {
+            for (int i = x; i < x + _brushSize; i++)
+            {
+                for (int j = y; j < y + _brushSize; j++)
+                {
+                    //if (i >= _width || j >= _height)
+                    //{
+                    //    //_bitmap.Save($"error {GetConfig()}.png");
+                    //    Console.WriteLine();
+                    //}
+                    //_bitmap.Save($"error {GetConfig()}.png");
+                    _bitmap.SetPixel(i, j, _currentColor);
+                }
+            }
         }
 
         private void DrawBackground()
         {
-            if (_patternStartY != default)
+            if (PatternalHeight != _height)
             {
-                //color upper background
+                // color upper background
                 for (int i = 0; i < _width; i++)
                 {
                     for (int j = 0; j < _patternStartY; j++)
@@ -256,10 +266,10 @@ namespace FractalGenerator.BackgroundDrawers
                     }
                 }
 
-                //color bottom background
+                // color bottom background
                 for (int i = 0; i < _width; i++)
                 {
-                    for (int j = _patternEndY; j < _height; j++)
+                    for (int j = _patternEndY + 1; j < _height; j++)
                     {
                         _bitmap.SetPixel(i, j, _fillOutsideColor);
                     }
@@ -274,87 +284,88 @@ namespace FractalGenerator.BackgroundDrawers
                 case Direction.ToRightDown:
                     if (PatternalX >= PatternalWidth - 1)
                     {
-                        //bounce from right bound
+                        // bounce from right bound
                         y += _brushSize;
                         _direction = Direction.ToLeftDown;
                         break;
                     }
                     if (PatternalY >= PatternalHeight - 1)
                     {
-                        //bounce from down bound
+                        // bounce from down bound
                         x += _brushSize;
                         _direction = Direction.ToRightUp;
                         break;
                     }
-                    //normal move
+                    // normal move
                     x += _brushSize;
                     y += _brushSize;
                     break;
                 case Direction.ToRightUp:
                     if (PatternalX >= PatternalWidth - 1)
                     {
-                        //bounce from right bound
+                        // bounce from right bound
                         y -= _brushSize;
                         _direction = Direction.ToLeftUp;
                         break;
                     }
                     if (PatternalY <= 0)
                     {
-                        //bounce from up bound
+                        // bounce from up bound
                         x += _brushSize;
                         _direction = Direction.ToRightDown;
                         break;
                     }
-                    
-                    //normal move
+                    // normal move
                     x += _brushSize;
                     y -= _brushSize;
                     break;
                 case Direction.ToLeftUp:
                     if (PatternalX <= 0)
                     {
-                        //bounce from left bound
+                        // bounce from left bound
                         y -= _brushSize;
                         _direction = Direction.ToRightUp;
                         break;
                     }
                     if (PatternalY <= 0)
                     {
-                        //bounce from up bound
+                        // bounce from up bound
                         x -= _brushSize;
                         _direction = Direction.ToLeftDown;
                         break;
                     }
-                    //normal move
+                    // normal move
                     x -= _brushSize;
                     y -= _brushSize;
                     break;
                 case Direction.ToLeftDown:
                     if (PatternalX <= 0)
                     {
-                        //bounce from left bound
+                        // bounce from left bound
                         y += _brushSize;
                         _direction = Direction.ToRightDown;
                         break;
                     }
                     if (PatternalY >= PatternalHeight - 1)
                     {
-                        //bounce from down bound
+                        // bounce from down bound
                         x -= _brushSize;
                         _direction = Direction.ToLeftUp;
                         break;
                     }
-                    //normal move
+                    // normal move
                     x -= _brushSize;
                     y += _brushSize;
                     break;
             }
         }
-    }
 
-    struct Coordinate
-    {
-        public int x;
-        public int y;
+        private void SwitchColor()
+        {
+            if (_currentColor == _fillInsideColor)
+                _currentColor = _fillOutsideColor;
+            else
+                _currentColor = _fillInsideColor;
+        }
     }
 }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace FractalGenerator.BackgroundDrawers
+namespace WallpaperGenerator.Services.BackgroundDrawers
 {
     public interface IDrawer
     {
