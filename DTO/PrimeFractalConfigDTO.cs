@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
-using static WallpaperGenerator.Services.BackgroundDrawers.PrimeFractalDrawer;
+using static WeirdWallpaperGenerator.Services.BackgroundDrawers.PrimeFractalDrawer;
 
-namespace WallpaperGenerator.DTO
+namespace WeirdWallpaperGenerator.DTO
 {
     public class PrimeFractalConfigDTO : ConfigDTO
     {

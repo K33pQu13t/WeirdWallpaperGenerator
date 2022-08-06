@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WallpaperGenerator.Config
+namespace WeirdWallpaperGenerator.Config
 {
     public class ColorSet
     {

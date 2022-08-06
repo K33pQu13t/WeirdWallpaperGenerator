@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace WallpaperGenerator.Services.BackgroundDrawers
+namespace WeirdWallpaperGenerator.Services.BackgroundDrawers
 {
     public interface IDrawer
     {

@@ -1,10 +1,10 @@
-﻿using WallpaperGenerator.Config;
-using WallpaperGenerator.Controllers;
+﻿using WeirdWallpaperGenerator.Config;
+using WeirdWallpaperGenerator.Controllers;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 using System.Collections.Generic;
 
-namespace WallpaperGenerator
+namespace WeirdWallpaperGenerator
 {
     class Program
     {
@@ -15,17 +15,17 @@ namespace WallpaperGenerator
                 .AddJsonFile("config.json", optional: false);
             IConfiguration config = builder.Build();
 
-            // TODO: make array of object js section
+            // TODO: make array of object js section for color sets
             var cs1 = config.GetSection("colorSet1").Get<ColorSet>();
             var cs2 = config.GetSection("colorSet2").Get<ColorSet>();
 
             var contextConfig = ContextConfig.GetInstance();
             contextConfig.ColorsSets = new ColorsSets() { Sets = new List<ColorSet>() { cs1, cs2 } };
 
-
-
             MainController controller = new MainController();
-            controller.ExecuteCommand("/g -m p -s");
+            //controller.ExecuteCommand(args);
+
+            controller.ExecuteCommand(new string[] { "/g -m p ?" });
         }
     }
 }

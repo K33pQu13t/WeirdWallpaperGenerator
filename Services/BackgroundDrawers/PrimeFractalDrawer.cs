@@ -1,12 +1,12 @@
-﻿using WallpaperGenerator.DTO;
-using WallpaperGenerator.Helpers;
-using WallpaperGenerator.Services;
+﻿using WeirdWallpaperGenerator.DTO;
+using WeirdWallpaperGenerator.Helpers;
+using WeirdWallpaperGenerator.Services;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace WallpaperGenerator.Services.BackgroundDrawers
+namespace WeirdWallpaperGenerator.Services.BackgroundDrawers
 {
     public class PrimeFractalDrawer : IDrawer
     {
@@ -133,18 +133,17 @@ namespace WallpaperGenerator.Services.BackgroundDrawers
         {
             if (_brushSize == default)
             {
-                _brushSize = MathExtension.GCD(_width, _height);
+                _brushSize = _width.GCD(_height);
                 _patternStartY = 0;
                 _patternEndY = _height - 1;
             }
-            else if (MathExtension.GCD(_width, _height) != _brushSize)
+            else if (_width.GCD(_height) != _brushSize)
             {
                 int size;
                 int newHeight = _height;
                 do
                 {
-                    size = MathExtension.GCD(_width, newHeight);
-                    newHeight--;
+                    size = _width.GCD(newHeight--);
                     if (newHeight <= 0)
                         throw new Exception("unable to fit such width, height and brush size");
                 }
