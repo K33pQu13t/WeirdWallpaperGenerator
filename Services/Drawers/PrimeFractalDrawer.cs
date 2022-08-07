@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace WeirdWallpaperGenerator.Services.BackgroundDrawers
+namespace WeirdWallpaperGenerator.Services.Drawers
 {
     public class PrimeFractalDrawer : IDrawer
     {
@@ -111,9 +111,15 @@ namespace WeirdWallpaperGenerator.Services.BackgroundDrawers
             _brushSize = config.BrushSize;
 
             if (_width % _brushSize != 0)
-                throw new Exception("Width must can be divided by brushSize without remainder");
+                throw ExceptionHelper.GetException(
+                    nameof(PrimeFractalDrawer),
+                    "Constructor",
+                    "width must can be divided by brush size without remainder");
             if (_brushSize > _width || _brushSize > _height)
-                throw new Exception("Brush size is bigger than picture area");
+                throw ExceptionHelper.GetException(
+                    nameof(PrimeFractalDrawer),
+                    "Constructor", 
+                    "brush size can't be bigger than picture area");
 
             _fillInsideColor = config.FillInsideColor;
             _fillOutsideColor = config.FillOutsideColor;
@@ -145,7 +151,10 @@ namespace WeirdWallpaperGenerator.Services.BackgroundDrawers
                 {
                     size = _width.GCD(newHeight--);
                     if (newHeight <= 0)
-                        throw new Exception("unable to fit such width, height and brush size");
+                        throw ExceptionHelper.GetException(
+                            nameof(PrimeFractalDrawer),
+                            nameof(SetPattern), 
+                            "unable to fit such width, height and brush size");
                 }
                 while (size != _brushSize);
 

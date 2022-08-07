@@ -1,6 +1,6 @@
 ﻿using WeirdWallpaperGenerator.DTO;
 using WeirdWallpaperGenerator.Helpers;
-using WeirdWallpaperGenerator.Services.BackgroundDrawers;
+using WeirdWallpaperGenerator.Services.Drawers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -8,6 +8,7 @@ using System.Linq;
 using System.Windows.Forms;
 using WeirdWallpaperGenerator.Config;
 using System.ComponentModel;
+using System.IO;
 
 namespace WeirdWallpaperGenerator.Services.Configurers
 {
@@ -112,27 +113,55 @@ namespace WeirdWallpaperGenerator.Services.Configurers
             }
 
             // determining colors
-            Color color1, color2;
+            Color color1 = Color.Transparent, color2 = Color.Transparent;
             if (commandsList.ContainsFlag(colorsFlag))
             {
                 string c = commandsList.GetFlagValue(colorsFlag);
                 List<string> colors = c.Replace(" ", "").Split(',').ToList();
-                // TODO check if its color or color set title or file path. Now its only color
-                color1 = colors[0].ToColor();
-                color2 = colors[1].ToColor();
+                try
+                {
+                    // TODO check if its color or color set title or file path. Now it must be only color
+                    color1 = colors[0].ToColor();
+                    color2 = colors[1].ToColor();
+                }
+                catch(ArgumentOutOfRangeException ex)
+                {
+                    throw ExceptionHelper.GetException(
+                        nameof(PrimeFractalConfigurer).ToString(), 
+                        nameof(Configure).ToString(),
+                        $"error trying to get collors. 2 colors must be specified");
+                }
+                catch(ArgumentException ex)
+                {
+                    throw ExceptionHelper.GetException(
+                       nameof(PrimeFractalConfigurer).ToString(),
+                       nameof(Configure).ToString(),
+                       $"wrong colors format. Colors must be specified as hex, like: #1b1b1b or #77c3c3c3 (with alpha-channel)");
+                }
             }
             else
             {
-                // TODO get from all color sets if does not specified
-                color1 = _colorService.GetRandomColor(
-                    _colorService.GetColorsFromFile(_contextConfig.ColorsSets.Sets[0].Path));
-                color2 = _colorService.GetRandomColor(
-                   _colorService.GetColorsFromFile(_contextConfig.ColorsSets.Sets[1].Path));
-                if (_rnd.Next(0, 2) == 0)
+                try
                 {
-                    Color temp = color1;
-                    color1 = color2;
-                    color2 = temp;
+                    // TODO get from all color sets if does not specified
+                    color1 = _colorService.GetRandomColor(
+                        _colorService.GetColorsFromFile(_contextConfig.ColorsSets.Sets[0].Path));
+                    color2 = _colorService.GetRandomColor(
+                       _colorService.GetColorsFromFile(_contextConfig.ColorsSets.Sets[1].Path));
+                    if (_rnd.Next(0, 2) == 0)
+                    {
+                        Color temp = color1;
+                        color1 = color2;
+                        color2 = temp;
+                    }
+                }
+                catch (FileNotFoundException ex)
+                {
+                    throw ExceptionHelper.GetException(
+                         nameof(PrimeFractalConfigurer),
+                         nameof(Configure),
+                         $"error trying to get collors from file. " +
+                         $"\"{ex.FileName}\" file was not found. Check config.js and make sure colors paths exists");
                 }
             }
             config.FillInsideColor = color1;

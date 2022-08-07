@@ -23,9 +23,7 @@ namespace WeirdWallpaperGenerator
             contextConfig.ColorsSets = new ColorsSets() { Sets = new List<ColorSet>() { cs1, cs2 } };
 
             MainController controller = new MainController();
-            //controller.ExecuteCommand(args);
-
-            controller.ExecuteCommand(new string[] { "/g -m p ?" });
+            controller.ExecuteCommand(args);
         }
     }
 }

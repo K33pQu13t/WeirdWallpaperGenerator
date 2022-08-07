@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
-using static WeirdWallpaperGenerator.Services.BackgroundDrawers.PrimeFractalDrawer;
+using static WeirdWallpaperGenerator.Services.Drawers.PrimeFractalDrawer;
 
 namespace WeirdWallpaperGenerator.DTO
 {
