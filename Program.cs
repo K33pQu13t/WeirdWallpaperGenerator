@@ -9,6 +9,7 @@ namespace WeirdWallpaperGenerator
             new Startup();
 
             MainController controller = new MainController();
+            controller.ExecuteCommand(args);
         }
     }
 }
