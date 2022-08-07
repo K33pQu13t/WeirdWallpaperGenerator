@@ -1,17 +1,18 @@
-﻿using WeirdWallpaperGenerator.DTO;
-using WeirdWallpaperGenerator.Helpers;
-using WeirdWallpaperGenerator.Services.Drawers;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using WeirdWallpaperGenerator.Config;
-using System.ComponentModel;
-using System.IO;
+using WeirdWallpaperGenerator.DTO;
+using WeirdWallpaperGenerator.Helpers;
+using WeirdWallpaperGenerator.Services.Drawers;
 
 namespace WeirdWallpaperGenerator.Services.Configurers
 {
+    [Description("prime fractal generation method")]
     class PrimeFractalConfigurer : IDrawerConfigurer<PrimeFractalDrawer>, IHaveHelper
     {
         readonly ColorService _colorService;
@@ -185,8 +186,6 @@ namespace WeirdWallpaperGenerator.Services.Configurers
 
         public string GetHelp(List<string> commandList = null, string helpFor = "")
         {
-            // TODO: if commandLine specified then show help only for specified command
-
             string prefix = $"-m {method.First()}";
 
             if (string.IsNullOrWhiteSpace(helpFor))

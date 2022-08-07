@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace WeirdWallpaperGenerator.Config
+﻿namespace WeirdWallpaperGenerator.Config
 {
     public class ContextConfig
     {
@@ -16,6 +12,7 @@ namespace WeirdWallpaperGenerator.Config
             return instance;
         }
 
+        public About About { get; set; }
         public ColorsSets ColorsSets { get; set; }
     }
 }

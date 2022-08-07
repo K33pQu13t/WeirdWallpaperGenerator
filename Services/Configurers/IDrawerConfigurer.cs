@@ -1,6 +1,5 @@
-﻿
+﻿using System.Collections.Generic;
 using WeirdWallpaperGenerator.Services.Drawers;
-using System.Collections.Generic;
 
 namespace WeirdWallpaperGenerator.Services.Configurers
 {
