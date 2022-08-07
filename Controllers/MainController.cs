@@ -163,7 +163,6 @@ namespace WeirdWallpaperGenerator.Controllers
         {
             if (string.IsNullOrWhiteSpace(helpFor))
             {
-                // TODO: get assembly info there
                 return  $"\n{GetAbout()}\n" +
                         $"\nThis program can generate images different ways, using flags or random, and set it as background image.\n" +
                         $"List of generic commands and flags is presented below. Use \"help\" with parameters to get more.\n" +
