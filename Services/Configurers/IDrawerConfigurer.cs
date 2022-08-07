@@ -1,8 +1,8 @@
 ﻿
-using WallpaperGenerator.Services.BackgroundDrawers;
+using WeirdWallpaperGenerator.Services.Drawers;
 using System.Collections.Generic;
 
-namespace WallpaperGenerator.Services.Configurers
+namespace WeirdWallpaperGenerator.Services.Configurers
 {
     public interface IDrawerConfigurer<T> where T : IDrawer
     {
@@ -13,7 +13,10 @@ namespace WallpaperGenerator.Services.Configurers
         /// <returns></returns>
         T Configure(List<string> commandsList);
 
-        /// <returns>a string of command list with description and usage</returns>
-        string GetHelp();
+        /// <summary>
+        /// returns a help string about this method
+        /// </summary>
+        /// <returns></returns>
+        string GetMethodHelp();
     }
 }

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace WallpaperGenerator.DTO
+namespace WeirdWallpaperGenerator.DTO
 {
     public class ConfigDTO
     {

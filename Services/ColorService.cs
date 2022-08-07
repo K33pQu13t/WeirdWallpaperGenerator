@@ -1,4 +1,4 @@
-﻿using WallpaperGenerator.Helpers;
+﻿using WeirdWallpaperGenerator.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace WallpaperGenerator.Services
+namespace WeirdWallpaperGenerator.Services
 {
     public class ColorService
     {

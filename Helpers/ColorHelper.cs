@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Text;
 
-namespace WallpaperGenerator.Helpers
+namespace WeirdWallpaperGenerator.Helpers
 {
     public static class ColorHelper
     { 

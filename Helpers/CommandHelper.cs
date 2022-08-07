@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace WallpaperGenerator.Helpers
+namespace WeirdWallpaperGenerator.Helpers
 {
     public static class CommandHelper
     {
@@ -71,7 +71,7 @@ namespace WallpaperGenerator.Helpers
         /// gets the value next to flag string element
         /// </summary>
         /// <param name="commandLide"></param>
-        /// <param name="flag"></param>
+        /// <param name="flags"></param>
         /// <returns></returns>
         public static string GetFlagValue(this List<string> commandLide, string[] flags)
         {
@@ -88,12 +88,57 @@ namespace WallpaperGenerator.Helpers
                     if (index != -1)
                         break;
                 }
-
+ 
                 if (index == -1)
                     return string.Empty;
+
                 output = commandLide[index + 1];
                 if (output.StartsWith('-') || output.StartsWith('/'))
                     return string.Empty;
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return string.Empty;
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// gets the value from command line to get help for.
+        /// First it tries to get a value before the help keyword. Then after if it fails
+        /// </summary>
+        /// <param name="commandLide"></param>
+        /// <param name="helpVariations"></param>
+        /// <returns></returns>
+        public static string GetHelpValue(this List<string> commandLide, string[] helpVariations)
+        {
+            if (!commandLide.Any(c => helpVariations.Contains(c)))
+                return string.Empty;
+
+            string output;
+            try
+            {
+                int index = -1;
+                foreach (string keyWord in helpVariations)
+                {
+                    index = commandLide.IndexOf(keyWord);
+                    if (index != -1)
+                        break;
+                }
+
+                if (index == -1)
+                    return string.Empty;
+
+                // first try to get value before keyword, then after
+                try
+                {
+                    output = commandLide[index - 1];
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    output = commandLide[index + 1];
+                }
             }
             catch (ArgumentOutOfRangeException)
             {
@@ -109,13 +154,20 @@ namespace WallpaperGenerator.Helpers
         /// <param name="commandsList">collection of arguements</param>
         /// <param name="flags">flags without '-'</param>
         /// <returns>true if commands list contains any of flag</returns>
-        public static bool ContainsFlag (this List<string> commandsList, string[] flags)
+        public static bool ContainsFlag(this List<string> commandsList, string[] flags)
         {
             foreach(string element in commandsList)
             {
                 if (flags.Contains(element.Replace("-", "")))
                     return true;
             }
+            return false;
+        }
+
+        public static bool IsFlag(this string flag, string[] flags)
+        {
+            if (flags.Contains(flag.Replace("-", "")))
+                return true;
             return false;
         }
 
