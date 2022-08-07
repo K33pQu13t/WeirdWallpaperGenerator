@@ -1,10 +1,7 @@
-﻿using WeirdWallpaperGenerator.DTO;
-using WeirdWallpaperGenerator.Helpers;
-using WeirdWallpaperGenerator.Services;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
-using System.Text;
+using WeirdWallpaperGenerator.DTO;
+using WeirdWallpaperGenerator.Helpers;
 
 namespace WeirdWallpaperGenerator.Services.Drawers
 {

@@ -6,10 +6,11 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using WeirdWallpaperGenerator.Config;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Services;
-using WeirdWallpaperGenerator.Services.Drawers;
 using WeirdWallpaperGenerator.Services.Configurers;
+using WeirdWallpaperGenerator.Services.Drawers;
 
 namespace WeirdWallpaperGenerator.Controllers
 {
@@ -26,6 +27,8 @@ namespace WeirdWallpaperGenerator.Controllers
         private PrimeFractalConfigurer _primeFractalConfigurer;
         private SystemMessagePrinter _printer;
 
+        [Description("shows info about assembly")]
+        private readonly string about = "about";
         [Description("generates an image and saves it. Usage: /g [flags]")]
         private readonly string[] commandGenerate = new string[] { "g", "gen", "generate" };
         [Description("generates an image, saves it and sets it as background image. Usage: /sw [flags]")]
@@ -76,6 +79,10 @@ namespace WeirdWallpaperGenerator.Controllers
 
                 string methodValue = commandList.GetFlagValue(flagMethod); // TODO: check for -method
 
+                if (commandLine == about)
+                {
+                    Console.WriteLine($"\n{GetAbout()}");
+                }
                 if (commandList.Any(c => commandHelp.Contains(c)))
                 {
                     var value = commandList.GetHelpValue(commandHelp);
@@ -157,7 +164,8 @@ namespace WeirdWallpaperGenerator.Controllers
             if (string.IsNullOrWhiteSpace(helpFor))
             {
                 // TODO: get assembly info there
-                return  $"This program can generate images different ways, using flags or random, and set it as background image.\n" +
+                return  $"\n{GetAbout()}\n" +
+                        $"\nThis program can generate images different ways, using flags or random, and set it as background image.\n" +
                         $"List of generic commands and flags is presented below. Use \"help\" with parameters to get more.\n" +
                         $"Common usage: {{/command}} [flags]\n\n" +
                         $"Generic commands:\n" +
@@ -166,12 +174,16 @@ namespace WeirdWallpaperGenerator.Controllers
                         $"\nGeneric flags:\n" +
                         $"{string.Join(", ", flagShow.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagShow))}\n" +
                         $"{string.Join(", ", flagMethod.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagMethod))}\n" +
-                        $"\n{GetListOfMethods()}" +
+                        $"\n{GetListOfMethods()}\n" +
                         $"\n{string.Join(", ", commandHelp)}: {DescriptionHelper.GetDescription<MainController>(nameof(commandHelp))}\n";
             }
             else
             {
-                if (commandGenerate.Contains(helpFor[1..])) 
+                if (helpFor == about)
+                {
+                    return $"{about}: {DescriptionHelper.GetDescription<MainController>(nameof(about))}";
+                }
+                else if (commandGenerate.Contains(helpFor[1..])) 
                 {
                     return $"{string.Join(", ", commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandGenerate))}";
                 }
@@ -213,8 +225,18 @@ namespace WeirdWallpaperGenerator.Controllers
         private string GetListOfMethods()
         {
             return $"List of available methods:\n" +
-                   $"{string.Join(", ", _primeFractalConfigurer.method)}: prime fractal generation method";
+                   $"{string.Join(", ", _primeFractalConfigurer.method)}: " +
+                   $"{DescriptionHelper.GetDescription<PrimeFractalConfigurer>(nameof(PrimeFractalConfigurer))}";
             // TODO: Add new methods there
+        }
+
+        private string GetAbout()
+        {
+            var about = ContextConfig.GetInstance().About;
+            return  $"{about.ProjectName}\n" +
+                    $"version: {about.Version}\n" +
+                    $"release date: {about.UpdateDate}\n" +
+                    $"author: {about.Author}";
         }
     }
 }
