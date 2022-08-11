@@ -15,7 +15,8 @@ namespace WeirdWallpaperGenerator.Services
     {
         HttpClient _client;
         const string contentsUrlTemplate = "https://api.github.com/repos/{0}/contents"; //?ref=master";
-        const string branch = "?ref=master";
+        //const string branch = "?ref=master";
+        const string branch = "?ref=feature/add_auto_updater";
         const string _repo = "K33pQu13t/WeirdWallpaperGenerator";
 
         public string ReleaseFolder => "Release build";
@@ -60,14 +61,14 @@ namespace WeirdWallpaperGenerator.Services
 
             string updateHash = HashHelper.GetMD5ChecksumFromFolder(TempPath);
 
-            return !string.IsNullOrWhiteSpace(updateHash) && updateHash != about.Hash;
+            return updateHash == about.Hash;
         }
 
         private IConfiguration GetConfigFromUpdateFolder()
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(TempPath, ConfigPath), optional: false);
+                .AddJsonFile(Path.Combine(TempPath, configFile), optional: false);
             return builder.Build();
         }
 
@@ -92,33 +93,55 @@ namespace WeirdWallpaperGenerator.Services
             }
         }
 
-        private async Task<JArray> GetContents(string url)
+        private async Task<object> GetContents(string url)
         {
             string contentsJson = await _client.GetStringAsync(url);
-            return (JArray)JsonConvert.DeserializeObject(contentsJson);
+            return JsonConvert.DeserializeObject(contentsJson);
         }
 
         private async Task<Dictionary<string, string>> GetFilesToDownload(string url, string pathToGithubFileOrFolder = "")
         {
             Dictionary<string, string> filesToDownload = new Dictionary<string, string>();
-            url = $"{url}{(!string.IsNullOrWhiteSpace(pathToGithubFileOrFolder) ? $"/{pathToGithubFileOrFolder}{branch}" : "")}";
-            JArray contents = await GetContents(url);
-            foreach (var file in contents)
+            url += $"{(!string.IsNullOrWhiteSpace(pathToGithubFileOrFolder) ? $"/{pathToGithubFileOrFolder.Replace('\\', '/')}{branch}" : "")}";
+            object contents = await GetContents(url);
+            if (contents is JArray)
             {
-                var fileType = (string)file["type"];
+                JArray contentsArray = contents as JArray;
+                foreach (var file in contentsArray)
+                {
+                    var fileType = (string)file["type"];
+                    if (fileType == "file")
+                    {
+                        var downloadUrl = (string)file["download_url"];
+                        string filename = string.Join('/', ((string)file["path"]).Split('/')[1..]);
+                        filesToDownload.Add(downloadUrl, filename);
+                    }
+                    else if (fileType == "dir")
+                    {
+                        var directoryContentsUrl = (string)file["url"];
+
+                        await GetFilesToDownload(directoryContentsUrl);
+                    }
+                }
+            }
+            else if (contents is JObject)
+            {
+                JObject contentObject = contents as JObject;
+                var fileType = (string)contentObject["type"];
                 if (fileType == "file")
                 {
-                    var downloadUrl = (string)file["download_url"];
-                    string filename = string.Join('/', ((string)file["path"]).Split('/')[1..]);
+                    var downloadUrl = (string)contentObject["download_url"];
+                    string filename = string.Join('/', ((string)contentObject["path"]).Split('/')[1..]);
                     filesToDownload.Add(downloadUrl, filename);
                 }
                 else if (fileType == "dir")
                 {
-                    var directoryContentsUrl = (string)file["url"];
+                    var directoryContentsUrl = (string)contentObject["url"];
 
                     await GetFilesToDownload(directoryContentsUrl);
                 }
             }
+
             return filesToDownload;
         }
 
