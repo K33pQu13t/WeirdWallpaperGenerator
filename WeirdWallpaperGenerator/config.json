@@ -1,9 +1,9 @@
 {
   "About": {
     "ProjectName": "Weird wallpaper generator",
-    "Version": "1.0.1",// todo: dont forget to turn back to 1.0.0, thats just for test
+    "Version": "1.0.1", // todo: dont forget to turn back to 1.0.0, thats just for test
     "UpdateDate": "07.08.2022",
-    "Hash": ""
+    "Hash": "34DC52BEAE4C745691250596A8576EDE"
   },
 
   "UpdaterConfig": {
