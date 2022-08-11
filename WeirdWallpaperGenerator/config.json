@@ -1,9 +1,15 @@
 {
   "About": {
     "ProjectName": "Weird wallpaper generator",
-    "Version": "1.0.0",
+    "Version": "1.0.1",// todo: dont forget to turn back to 1.0.0, thats just for test
     "UpdateDate": "07.08.2022",
-    "Author": "K33p_Qu13t"
+    "Hash": ""
+  },
+
+  "UpdaterConfig": {
+    "AutoCheckUpdates": true,
+    "AskBeforeUpdate": false,
+    "CheckPeriodDays": 14
   },
 
   //"colors": [

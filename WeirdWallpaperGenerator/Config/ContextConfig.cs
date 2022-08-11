@@ -1,4 +1,6 @@
-﻿namespace WeirdWallpaperGenerator.Config
+﻿using System.Threading.Tasks;
+
+namespace WeirdWallpaperGenerator.Config
 {
     public class ContextConfig
     {
@@ -13,6 +15,11 @@
         }
 
         public About About { get; set; }
+        public UpdaterConfig UpdaterConfig { get; set; }
         public ColorsSets ColorsSets { get; set; }
+
+        public bool ShouldUpdateOnExit { get; set; }
+
+        public Task UpdateLoading { get; set; }
     }
 }
