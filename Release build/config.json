@@ -1,15 +1,15 @@
 {
   "About": {
     "ProjectName": "Weird wallpaper generator",
-    "Version": "1.0.0",
+    "Version": "1.0.1",
     "UpdateDate": "07.08.2022",
-    "Author": "K33p_Qu13t",
     "Hash": "34DC52BEAE4C745691250596A8576EDE"
   },
 
   "UpdaterConfig": {
-    "CheckUpdates": true,
-    "AskBeforeUpdate":  false
+    "AutoCheckUpdates": true,
+    "AskBeforeUpdate": false,
+    "CheckPeriodDays": 14
   },
 
   //"colors": [
