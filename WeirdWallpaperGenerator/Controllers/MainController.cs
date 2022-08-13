@@ -111,9 +111,10 @@ namespace WeirdWallpaperGenerator.Controllers
                 }
                 // TODO: else if another possible commands
                 #if DEBUG
-                else if (commandList.IsCommand("ght"))
+                // prepare build folder for release
+                else if (commandList.IsCommand("pb"))
                 {
-                    _releasePreparingService.GenerateHashTable();
+                    _releasePreparingService.Prepare(ReleasePreparingService.VersionStack.Patch);
                 }
                 #endif
             }
