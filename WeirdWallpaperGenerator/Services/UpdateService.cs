@@ -11,6 +11,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Config;
 using WeirdWallpaperGenerator.Helpers;
+using WeirdWallpaperGenerator.Models;
 
 namespace WeirdWallpaperGenerator.Services
 {
@@ -22,15 +23,21 @@ namespace WeirdWallpaperGenerator.Services
         const string branch = "?ref=feature/add_auto_updater";
         const string _repo = "K33pQu13t/WeirdWallpaperGenerator";
 
-        public string ReleaseFolder => "Release build";
-        const string configFile = "config.json";
-        string ConfigPath => Path.Combine(ReleaseFolder, configFile);
-        public string TempPath => Path.Combine(Path.GetTempPath(), ReleaseFolder);
+
+        const string configFileName = "config.json";
+        const string hashTableFileName = "hashtable";
+
+        public string ReleaseFolderName => "Release build";
+
+        string ConfigPath => Path.Combine(ReleaseFolderName, configFileName);
+        public string TempPath => Path.Combine(Path.GetTempPath(), ReleaseFolderName);
 
         readonly string _mainUrl;
 
         static readonly string[] positiveAnswers = new string[] { "y", "yes" };
         static readonly string[] negativeAnswers = new string[] { "n", "no" };
+
+        SerializationService _serializationService = new SerializationService();
 
         public UpdateService()
         {
@@ -62,12 +69,21 @@ namespace WeirdWallpaperGenerator.Services
 
         public bool IsUpdateReady()
         {
-            IConfiguration configUpdate = GetConfigFromUpdateFolder();
-            var aboutUpdate = configUpdate.GetSection("About").Get<About>();
+            //IConfiguration configUpdate = GetConfigFromUpdateFolder();
+            //var aboutUpdate = configUpdate.GetSection("About").Get<About>();
 
-            string updateHash = HashHelper.GetSHA1ChecksumFromFolder(TempPath);
+            //string updateHash = HashHelper.GetSHA1ChecksumFromFolder(TempPath, new string[] { configFile });
 
-            return updateHash == aboutUpdate.Hash;
+            //return updateHash == aboutUpdate.Hash;
+            HashTable hashtable = (HashTable)_serializationService.Deserialize(Path.Combine(TempPath, hashTableFileName));
+            Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(TempPath, new string[] { configFileName, hashTableFileName });
+            foreach(var hashPair in hashesFromUpdateFolder)
+            {
+                // if some of downloaded file's hash doesn't represent in hashtable (probably means bad downloading)
+                if (!hashtable.Table.ContainsKey(hashPair.Key))
+                    return false;
+            }
+            return true;
         }
 
         public async Task CheckUpdateBeforeExit()
@@ -102,7 +118,7 @@ namespace WeirdWallpaperGenerator.Services
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(TempPath, configFile), optional: false);
+                .AddJsonFile(Path.Combine(TempPath, configFileName), optional: false);
             return builder.Build();
         }
 
@@ -147,9 +163,8 @@ namespace WeirdWallpaperGenerator.Services
             Dictionary<string, string> filesToDownload = new Dictionary<string, string>();
             url += $"{(!string.IsNullOrWhiteSpace(pathToGithubFileOrFolder) ? $"/{pathToGithubFileOrFolder.Replace('\\', '/')}{branch}" : "")}";
             object contents = await GetContents(url);
-            if (contents is JArray)
+            if (contents is JArray contentsArray)
             {
-                JArray contentsArray = contents as JArray;
                 foreach (var file in contentsArray)
                 {
                     var fileType = (string)file["type"];
@@ -171,9 +186,8 @@ namespace WeirdWallpaperGenerator.Services
                     }
                 }
             }
-            else if (contents is JObject)
+            else if (contents is JObject contentObject)
             {
-                JObject contentObject = contents as JObject;
                 var fileType = (string)contentObject["type"];
                 if (fileType == "file")
                 {

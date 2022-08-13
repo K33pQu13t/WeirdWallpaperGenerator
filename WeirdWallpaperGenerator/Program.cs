@@ -21,7 +21,7 @@ namespace WeirdWallpaperGenerator
             context.UpdateLoading = startup.CheckUpdates();
 
             MainController controller = new MainController();
-            //controller.ExecuteCommand(args);
+            controller.ExecuteCommand(args);
 
             UpdateService _updater = new UpdateService();
             await _updater.CheckUpdateBeforeExit();

@@ -11,38 +11,45 @@ namespace WeirdWallpaperGenerator.Services
         readonly string _errorTitle;
         readonly string _warningTitle;
         readonly string _successTitle;
+        readonly string _logTitle;
 
         readonly ConsoleColorNullable _errorColor;
         readonly ConsoleColorNullable _warningColor;
         readonly ConsoleColorNullable _successColor;
-
+        readonly ConsoleColorNullable _logColor;
 
         private static SystemMessagePrinter instance;
         private SystemMessagePrinter(
             string errorTitle = "",
             string warningTitle = "",
             string successTitle = "",
+            string logTitle = "",
             ConsoleColorNullable errorColor = ConsoleColorNullable.Default,
             ConsoleColorNullable warningColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable successColor = ConsoleColorNullable.Default
+            ConsoleColorNullable successColor = ConsoleColorNullable.Default,
+            ConsoleColorNullable logColor = ConsoleColorNullable.Default
             ) 
         {
             _errorTitle = errorTitle;
             _warningTitle = warningTitle;
             _successTitle = successTitle;
+            _logTitle = logTitle;
 
             _errorColor = errorColor;
             _warningColor = warningColor;
             _successColor = successColor;
+            _logColor = logColor;
         }
 
         public static SystemMessagePrinter GetInstance(
             string errorTitle = "",
             string warningTitle = "",
             string successTitle = "",
+            string logTitle = "",
             ConsoleColorNullable errorColor = ConsoleColorNullable.Default,
             ConsoleColorNullable warningColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable successColor = ConsoleColorNullable.Default
+            ConsoleColorNullable successColor = ConsoleColorNullable.Default,
+            ConsoleColorNullable logColor = ConsoleColorNullable.Default
             )
         {
             if (instance == null)
@@ -50,9 +57,11 @@ namespace WeirdWallpaperGenerator.Services
                     errorTitle,
                     warningTitle,
                     successTitle,
+                    logTitle,
                     errorColor,
                     warningColor,
-                    successColor);
+                    successColor,
+                    logColor);
             return instance;
         }
 
@@ -85,6 +94,17 @@ namespace WeirdWallpaperGenerator.Services
                 ? Console.ForegroundColor
                 : (ConsoleColor)_successColor;
             Console.WriteLine($"{(string.IsNullOrWhiteSpace(_successTitle) ? "" : $"{_successTitle}: ")}{message}");
+            Console.ResetColor();
+            semaphore.Release();
+        }
+
+        internal void PrintLog(string message)
+        {
+            semaphore.Wait();
+            Console.ForegroundColor = _logColor == ConsoleColorNullable.Default
+                ? Console.ForegroundColor
+                : (ConsoleColor)_logColor;
+            Console.WriteLine($"{(string.IsNullOrWhiteSpace(_logTitle) ? "" : $"{_logTitle}: ")}{message}");
             Console.ResetColor();
             semaphore.Release();
         }

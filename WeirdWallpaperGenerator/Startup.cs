@@ -18,6 +18,17 @@ namespace WeirdWallpaperGenerator
 
         private void Configure()
         {
+            // get its instance to preset it for whole application on the start
+            SystemMessagePrinter.GetInstance(
+                "[Error]",
+                "[Warning]",
+                "[Success]",
+                "[Log]",
+                Enums.ConsoleColorNullable.DarkRed,
+                Enums.ConsoleColorNullable.DarkYellow,
+                Enums.ConsoleColorNullable.Green,
+                Enums.ConsoleColorNullable.Cyan);
+
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("config.json", optional: false);
@@ -44,7 +55,7 @@ namespace WeirdWallpaperGenerator
         {
             if (await _updater.ShouldUpdate())
             {
-                await _updater.GetUpdate(_updater.ReleaseFolder, _updater.TempPath);
+                await _updater.GetUpdate(_updater.ReleaseFolderName, _updater.TempPath);
             }
             ShouldUpdateOnExit();
         }

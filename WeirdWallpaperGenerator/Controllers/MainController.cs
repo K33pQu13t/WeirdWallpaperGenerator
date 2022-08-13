@@ -24,8 +24,9 @@ namespace WeirdWallpaperGenerator.Controllers
         private readonly uint SPIF_UPDATEINIFILE = 0x01;
         private readonly uint SPIF_SENDWININICHANGE = 0x02;
 
-        private PrimeFractalConfigurer _primeFractalConfigurer;
-        private SystemMessagePrinter _printer;
+        private PrimeFractalConfigurer _primeFractalConfigurer = new PrimeFractalConfigurer();
+        private SystemMessagePrinter _printer = SystemMessagePrinter.GetInstance();
+        private ReleasePreparingService _releasePreparingService = new ReleasePreparingService();
 
         [Description("shows info about assembly")]
         private readonly string about = "about";
@@ -48,22 +49,13 @@ namespace WeirdWallpaperGenerator.Controllers
             "Usage: -m {one of methods}")]
         private readonly string[] flagMethod = new string[] { "m", "method" };
 
+        // todo: get from config.json
         /// <summary>
         /// a folder to save wallpapers
         /// </summary>
         private const string outputFolder = "backgrounds";
 
-        public MainController()
-        {
-            _primeFractalConfigurer = new PrimeFractalConfigurer();
-            _printer = SystemMessagePrinter.GetInstance(
-                "[Error]",
-                "[Warning]",
-                "[Success]",
-                Enums.ConsoleColorNullable.DarkRed,
-                Enums.ConsoleColorNullable.DarkYellow,
-                Enums.ConsoleColorNullable.Green);
-        }
+
 
         public void ExecuteCommand(string[] commandLineArray)
         {
@@ -83,7 +75,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 {
                     Console.WriteLine($"\n{GetAbout()}");
                 }
-                if (commandList.Any(c => commandHelp.Contains(c)))
+                else if (commandList.Any(c => commandHelp.Contains(c)))
                 {
                     var value = commandList.GetHelpValue(commandHelp);
                     Console.WriteLine(GetHelp(commandList, value));
@@ -118,6 +110,12 @@ namespace WeirdWallpaperGenerator.Controllers
                     // TODO: else if code there for another methods
                 }
                 // TODO: else if another possible commands
+                #if DEBUG
+                else if (commandList.IsCommand("ght"))
+                {
+                    _releasePreparingService.GenerateHashTable();
+                }
+                #endif
             }
             catch (Exception ex)
             {

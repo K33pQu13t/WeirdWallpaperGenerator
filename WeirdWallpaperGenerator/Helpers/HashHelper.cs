@@ -17,7 +17,7 @@ namespace WeirdWallpaperGenerator.Helpers
 				using (var stream = File.OpenRead(filePath))
 				{
 					var hash = sha1.ComputeHash(stream);
-					return BitConverter.ToString(hash).Replace("-", "");
+					return BitConverter.ToString(hash).Replace("-", "").ToLower();
 				}
 			}
 		}
@@ -45,20 +45,41 @@ namespace WeirdWallpaperGenerator.Helpers
 			}
 		}
 
-		public static string GetSHA1ChecksumFromFolder(string folderPath)
-        {
-			string[] paths = Directory.GetFiles(folderPath).Where(x => Path.GetFileName(x) != "config.json").ToArray();
-			string result = string.Empty;
-			foreach(var path in paths)
-            {
-				result += GetSHA1Checksum(path);
-            }
+		//public static string GetSHA1ChecksumFromFolder(string folderPath, string[] excludeFiles = null)
+  //      {
+		//	string[] paths = Directory.GetFiles(folderPath);
+		//	if (excludeFiles != null)
+  //          {
+		//		paths = paths.Where(x => !excludeFiles.Contains(Path.GetFileName(x))).ToArray();
+		//	}
 
-			using (var sha1 = SHA1.Create())
-            {
-				var hash = sha1.ComputeHash(Encoding.ASCII.GetBytes(result));
-				return BitConverter.ToString(hash).Replace("-", "");
+		//	string result = string.Empty;
+		//	foreach(var path in paths)
+  //          {
+		//		result += GetSHA1Checksum(path);
+  //          }
+
+		//	using (var sha1 = SHA1.Create())
+  //          {
+		//		var hash = sha1.ComputeHash(Encoding.ASCII.GetBytes(result));
+		//		return BitConverter.ToString(hash).Replace("-", "").ToLower();
+		//	}
+		//}
+
+		public static Dictionary<string, string> GetSHA1ChecksumFromFolder(string folderPath, string[] excludeFiles = null)
+        {
+			Dictionary<string, string> checksums = new Dictionary<string, string>();
+			string[] files = Directory.GetFiles(folderPath);
+			foreach (var file in files)
+			{
+				string filename = Path.GetFileName(file);
+				if (excludeFiles.Contains(filename))
+					continue;
+				string hash = GetSHA1Checksum(Path.GetFullPath(file));
+				checksums.Add(hash, filename);
 			}
+
+			return checksums;
 		}
 	}
 }

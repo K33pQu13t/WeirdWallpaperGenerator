@@ -180,9 +180,9 @@ namespace WeirdWallpaperGenerator.Helpers
 
         public static bool IsCommand(this List<string> commandsList, string command)
         {
-            if (commandsList[0].Trim() != "/")
+            if (!commandsList[0].Trim().StartsWith("/"))
                 return false;
-            return commandsList[0].Trim() == command.Replace("/", "");
+            return commandsList[0].Trim().Replace("/", "") == command;
         }
     }
 }
