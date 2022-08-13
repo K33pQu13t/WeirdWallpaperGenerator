@@ -9,30 +9,54 @@ namespace WeirdWallpaperGenerator.Helpers
 {
     public static class HashHelper
     {
-		public static string GetMD5Checksum(string filename)
-		{
-			using (var md5 = MD5.Create())
+		public static string GetSHA1Checksum(string filePath)
+        {
+
+			using (var sha1 = SHA1.Create())
 			{
-				using (var stream = File.OpenRead(filename))
+				using (var stream = File.OpenRead(filePath))
 				{
-					var hash = md5.ComputeHash(stream);
+					var hash = sha1.ComputeHash(stream);
 					return BitConverter.ToString(hash).Replace("-", "");
 				}
 			}
 		}
 
-		public static string GetMD5ChecksumFromFolder(string folderPath)
+		/// <summary>
+		/// the issue is what github places some information to content's byte array
+		/// https://alblue.bandlem.com/2011/08/git-tip-of-week-objects.html
+		/// </summary>
+		/// <param name="filePath"></param>
+		/// <returns>sha1 to compare with github api</returns>
+		public static string GetSHA1ChecksumGithub(string filePath)
+        {
+			using (var sha1 = SHA1.Create())
+			{
+				using (var stream = File.OpenRead(filePath))
+				{
+					MemoryStream memoryStream = new MemoryStream();
+					stream.CopyTo(memoryStream);
+					byte[] bytes = memoryStream.ToArray();
+
+					var hash = sha1.ComputeHash(
+						Encoding.UTF8.GetBytes($"blob {bytes.Length}{char.MinValue}").Concat(bytes).ToArray());
+					return BitConverter.ToString(hash).Replace("-", "").ToLower();
+				}
+			}
+		}
+
+		public static string GetSHA1ChecksumFromFolder(string folderPath)
         {
 			string[] paths = Directory.GetFiles(folderPath).Where(x => Path.GetFileName(x) != "config.json").ToArray();
 			string result = string.Empty;
 			foreach(var path in paths)
             {
-				result += GetMD5Checksum(path);
+				result += GetSHA1Checksum(path);
             }
 
-			using (var md5 = MD5.Create())
+			using (var sha1 = SHA1.Create())
             {
-				var hash = md5.ComputeHash(Encoding.ASCII.GetBytes(result));
+				var hash = sha1.ComputeHash(Encoding.ASCII.GetBytes(result));
 				return BitConverter.ToString(hash).Replace("-", "");
 			}
 		}

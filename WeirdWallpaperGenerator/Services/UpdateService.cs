@@ -1,8 +1,11 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -26,6 +29,9 @@ namespace WeirdWallpaperGenerator.Services
 
         readonly string _mainUrl;
 
+        static readonly string[] positiveAnswers = new string[] { "y", "yes" };
+        static readonly string[] negativeAnswers = new string[] { "n", "no" };
+
         public UpdateService()
         {
             _client = new HttpClient();
@@ -47,21 +53,49 @@ namespace WeirdWallpaperGenerator.Services
             DeleteTempPath();
             await GetUpdate(ConfigPath, TempPath);
 
-            IConfiguration config = GetConfigFromUpdateFolder();
+            IConfiguration configOfUpdate = GetConfigFromUpdateFolder();
             // get about section from last loaded version in repo
-            var about = config.GetSection("About").Get<About>();
+            var aboutFromUpdate = configOfUpdate.GetSection("About").Get<About>();
             // compare it with current
-            return VersionComparer(ContextConfig.GetInstance().About.Version, about.Version) == 1;
+            return VersionComparer(ContextConfig.GetInstance().About.Version, aboutFromUpdate.Version) == 1;
         }
 
         public bool IsUpdateReady()
         {
-            IConfiguration config = GetConfigFromUpdateFolder();
-            var about = config.GetSection("About").Get<About>();
+            IConfiguration configUpdate = GetConfigFromUpdateFolder();
+            var aboutUpdate = configUpdate.GetSection("About").Get<About>();
 
-            string updateHash = HashHelper.GetMD5ChecksumFromFolder(TempPath);
+            string updateHash = HashHelper.GetSHA1ChecksumFromFolder(TempPath);
 
-            return updateHash == about.Hash;
+            return updateHash == aboutUpdate.Hash;
+        }
+
+        public async Task CheckUpdateBeforeExit()
+        {
+            var context = ContextConfig.GetInstance();
+            // wait for update to download
+            await context.UpdateLoading;
+
+            if (context.ShouldUpdateOnExit)
+            {
+                if (context.UpdaterConfig.AskBeforeUpdate)
+                {
+                    Console.WriteLine("A new version of the programm is ready. Update it? (y/n)");
+                    string answer = string.Empty;
+                    while (!(positiveAnswers.Contains(answer) || negativeAnswers.Contains(answer)))
+                    {
+                        answer = Console.ReadLine();
+                    }
+
+                    if (negativeAnswers.Contains(answer))
+                        return;
+                }
+
+                // TODO: start cmd process of cutting-pasting-deleting-running procces of updation here
+                Console.WriteLine("update started");
+                CopyUpdateToWorkFolder();
+                Environment.Exit(0);
+            }
         }
 
         private IConfiguration GetConfigFromUpdateFolder()
@@ -72,13 +106,22 @@ namespace WeirdWallpaperGenerator.Services
             return builder.Build();
         }
 
-        public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave)
+        public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave, List<string> hashesToExclude = null)
         {
-            Dictionary<string, string> filesToDownload = await GetFilesToDownload(_mainUrl, pathToUpdateGithubFolderOrFile);
+            if (hashesToExclude == null)
+                hashesToExclude = GetCurrentVersionFilesGithubSha1Hashes();
+
+            Dictionary<string, string> filesToDownload = 
+                await GetFilesToDownload(_mainUrl, pathToUpdateGithubFolderOrFile, hashesToExclude);
             foreach (var fileToDownload in filesToDownload)
             {
                 await Download(fileToDownload.Key, Path.Combine(pathToSave, fileToDownload.Value.Replace('/', '\\')));
             }
+        }
+
+        public void CopyUpdateToWorkFolder()
+        {
+            Process.Start("cmd.exe", $@"move {TempPath} {Environment.CurrentDirectory}"); //&& what's new.txt");
         }
 
         private async Task Download(string url, string path)
@@ -99,7 +142,7 @@ namespace WeirdWallpaperGenerator.Services
             return JsonConvert.DeserializeObject(contentsJson);
         }
 
-        private async Task<Dictionary<string, string>> GetFilesToDownload(string url, string pathToGithubFileOrFolder = "")
+        private async Task<Dictionary<string, string>> GetFilesToDownload(string url, string pathToGithubFileOrFolder = "", List<string> hashesToExclude = null)
         {
             Dictionary<string, string> filesToDownload = new Dictionary<string, string>();
             url += $"{(!string.IsNullOrWhiteSpace(pathToGithubFileOrFolder) ? $"/{pathToGithubFileOrFolder.Replace('\\', '/')}{branch}" : "")}";
@@ -112,6 +155,10 @@ namespace WeirdWallpaperGenerator.Services
                     var fileType = (string)file["type"];
                     if (fileType == "file")
                     {
+                        var hash = (string)file["sha"];
+                        if (hashesToExclude != null && hashesToExclude.Contains(hash))
+                            continue;
+
                         var downloadUrl = (string)file["download_url"];
                         string filename = string.Join('/', ((string)file["path"]).Split('/')[1..]);
                         filesToDownload.Add(downloadUrl, filename);
@@ -151,6 +198,20 @@ namespace WeirdWallpaperGenerator.Services
             {
                 Directory.Delete(TempPath, true);
             }
+        }
+
+        public List<string> GetCurrentVersionFilesGithubSha1Hashes()
+        {
+            var path = Environment.CurrentDirectory;
+            List<string> hashes = new List<string>();
+
+            string[] filesPaths = Directory.GetFiles(path);
+            foreach (string filePath in filesPaths)
+            {
+                hashes.Add(HashHelper.GetSHA1ChecksumGithub(filePath));
+            }
+
+            return hashes;
         }
 
         /// <returns>-1 if version 1 is higher. 1 if version 2 is higher. 0 if equals </returns>
