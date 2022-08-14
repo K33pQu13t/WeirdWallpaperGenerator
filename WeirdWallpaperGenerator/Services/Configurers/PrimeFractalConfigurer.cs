@@ -5,8 +5,9 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using WeirdWallpaperGenerator.Config;
+using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.DTO;
+using WeirdWallpaperGenerator.Enums.Drawers;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Services.Drawers;
 
@@ -162,7 +163,7 @@ namespace WeirdWallpaperGenerator.Services.Configurers
                          nameof(PrimeFractalConfigurer),
                          nameof(Configure),
                          $"error trying to get collors from file. " +
-                         $"\"{ex.FileName}\" file was not found. Check config.js and make sure colors paths exists");
+                         $"\"{ex.FileName}\" file was not found. Check config.json and make sure colors paths exists");
                 }
             }
             config.FillInsideColor = color1;
@@ -171,12 +172,12 @@ namespace WeirdWallpaperGenerator.Services.Configurers
             // determining start corner position
             if (commandsList.ContainsFlag(setCornerFlag))
             {
-                config.StartPosition = (PrimeFractalDrawer.CornerPosition)int.Parse(commandsList.GetFlagValue(setCornerFlag));
+                config.StartPosition = (CornerPosition)int.Parse(commandsList.GetFlagValue(setCornerFlag));
             }
             else
             {
-                var cornerPositions = Enum.GetValues(typeof(PrimeFractalDrawer.CornerPosition))
-                    .OfType<PrimeFractalDrawer.CornerPosition>().ToList();
+                var cornerPositions = Enum.GetValues(typeof(CornerPosition))
+                    .OfType<CornerPosition>().ToList();
                 config.StartPosition = cornerPositions[_rnd.Next(0, cornerPositions.Count)];
             }
 

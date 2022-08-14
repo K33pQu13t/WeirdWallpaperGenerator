@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using WeirdWallpaperGenerator.Config;
+using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Models;
 
@@ -13,6 +13,7 @@ namespace WeirdWallpaperGenerator.Services
     {
         const string buildFolder = @"..\..\..\..\Release build";
         const string configFileName = "config.json";
+        string configFilePath => Path.Combine(buildFolder, configFileName);
         const string hashTableFileName = "hashtable";
 
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
@@ -61,11 +62,11 @@ namespace WeirdWallpaperGenerator.Services
         internal void IncrementVersion(VersionStack stack)
         {
             var config = GetConfigFromBuildFolder();
-            var about = config.GetSection("About").Get<About>();
 
-            var stacks = about.Version.Split('.');
+            var stacks = config.About.Version.Split('.');
             string newStack = (Convert.ToInt32(stacks[(int)stack])
                 +1).ToString();
+
 
             List<string> newVersion = new List<string>();
             for (int i = 0; i <= (int)VersionStack.Patch; i++)
@@ -76,15 +77,18 @@ namespace WeirdWallpaperGenerator.Services
                     newVersion.Add(stacks[i]);
             }
 
-            config.GetSection("About")["version"] = string.Join('.', newVersion);
+            config.About.Version = string.Join('.', newVersion);
+            ContextConfig.Save(config);
         }
 
-        private IConfiguration GetConfigFromBuildFolder()
+        private Configuration.Config GetConfigFromBuildFolder()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.GetFullPath(Path.Combine(buildFolder, configFileName)), optional: false);
-            return builder.Build();
+            using (StreamReader file = File.OpenText("test.json"))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                return (Configuration.Config)serializer
+                    .Deserialize(file, typeof(Configuration.Config));
+            }
         }
     }
 }

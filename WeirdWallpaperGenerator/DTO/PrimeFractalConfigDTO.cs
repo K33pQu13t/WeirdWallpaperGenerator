@@ -1,9 +1,9 @@
 ﻿using System.Drawing;
-using static WeirdWallpaperGenerator.Services.Drawers.PrimeFractalDrawer;
+using WeirdWallpaperGenerator.Enums.Drawers;
 
 namespace WeirdWallpaperGenerator.DTO
 {
-    public class PrimeFractalConfigDTO : ConfigDTO
+    public class PrimeFractalConfigDTO : DrawerConfigDto
     {
         public Color FillInsideColor { get; set; }
         public Color FillOutsideColor { get; set; }

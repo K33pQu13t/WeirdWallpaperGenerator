@@ -9,7 +9,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
-using WeirdWallpaperGenerator.Config;
+using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Models;
 
@@ -54,32 +54,47 @@ namespace WeirdWallpaperGenerator.Services
         /// <returns></returns>
         public async Task<bool> ShouldUpdate()
         {
-            if (!ContextConfig.GetInstance().UpdaterConfig.AutoCheckUpdates)
+            var _contextConfig = ContextConfig.GetInstance();
+            if (!_contextConfig.UpdaterSettings.AutoCheckUpdates)
                 return false;
+
+            // if its not time yet - skip
+            var lastDateUpdate = _contextConfig.UpdaterSettings.LastUpdateDate;
+            if (lastDateUpdate.AddDays(_contextConfig.UpdaterSettings.CheckPeriodDays) > DateTime.Now.Date)
+                return false;
+
 
             DeleteTempPath();
             await GetUpdate(ConfigPath, TempPath);
 
-            IConfiguration configOfUpdate = GetConfigFromUpdateFolder();
-            // get about section from last loaded version in repo
-            var aboutFromUpdate = configOfUpdate.GetSection("About").Get<About>();
+            Config configOfUpdate = GetConfigFromUpdateFolder();
             // compare it with current
-            return VersionComparer(ContextConfig.GetInstance().About.Version, aboutFromUpdate.Version) == 1;
+            return VersionComparer(ContextConfig.GetInstance().About.Version, configOfUpdate.About.Version) == 1;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>true if all needed files was downloaded, integrity is ensured</returns>
         public bool IsUpdateReady()
         {
-            //IConfiguration configUpdate = GetConfigFromUpdateFolder();
-            //var aboutUpdate = configUpdate.GetSection("About").Get<About>();
+            // todo: probably need to check if all needed files was downloaded - nothing lost
 
-            //string updateHash = HashHelper.GetSHA1ChecksumFromFolder(TempPath, new string[] { configFile });
+            // that files somewhy changes they content so hash changed anyway
+            string[] excludeFileNames = new string[] 
+            { 
+                "WeirdWallpaperGenerator.deps.json", 
+                "WeirdWallpaperGenerator.runtimeconfig.json" 
+            };
 
-            //return updateHash == aboutUpdate.Hash;
             HashTable hashtable = (HashTable)_serializationService.Deserialize(Path.Combine(TempPath, hashTableFileName));
             Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(TempPath, new string[] { configFileName, hashTableFileName });
             foreach(var hashPair in hashesFromUpdateFolder)
             {
-                // if some of downloaded file's hash doesn't represent in hashtable (probably means bad downloading)
+                if (excludeFileNames.Contains(hashPair.Value))
+                    continue;
+
+                // if some of downloaded file's hashes didn't represent in hashtable (probably means integrity issue)
                 if (!hashtable.Table.ContainsKey(hashPair.Key))
                     return false;
             }
@@ -94,7 +109,7 @@ namespace WeirdWallpaperGenerator.Services
 
             if (context.ShouldUpdateOnExit)
             {
-                if (context.UpdaterConfig.AskBeforeUpdate)
+                if (context.UpdaterSettings.AskBeforeUpdate)
                 {
                     Console.WriteLine("A new version of the programm is ready. Update it? (y/n)");
                     string answer = string.Empty;
@@ -109,17 +124,21 @@ namespace WeirdWallpaperGenerator.Services
 
                 // TODO: start cmd process of cutting-pasting-deleting-running procces of updation here
                 Console.WriteLine("update started");
-                CopyUpdateToWorkFolder();
+                //CopyUpdateToWorkFolder();
+                context.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
+                // TODO: need to save config.json to update information
                 Environment.Exit(0);
             }
         }
 
-        private IConfiguration GetConfigFromUpdateFolder()
+        private Config GetConfigFromUpdateFolder()
         {
-            var builder = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(Path.Combine(TempPath, configFileName), optional: false);
-            return builder.Build();
+            using (StreamReader file = File.OpenText("test.json"))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+                return (Config)serializer
+                    .Deserialize(file, typeof(Config));
+            }
         }
 
         public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave, List<string> hashesToExclude = null)

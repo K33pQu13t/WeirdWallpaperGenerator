@@ -6,7 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using WeirdWallpaperGenerator.Config;
+using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Configurers;
@@ -48,12 +48,6 @@ namespace WeirdWallpaperGenerator.Controllers
             "specifies a generation method. If not specified, then random method will be choosen. " +
             "Usage: -m {one of methods}")]
         private readonly string[] flagMethod = new string[] { "m", "method" };
-
-        // todo: get from config.json
-        /// <summary>
-        /// a folder to save wallpapers
-        /// </summary>
-        private const string outputFolder = "backgrounds";
 
 
 
@@ -136,7 +130,9 @@ namespace WeirdWallpaperGenerator.Controllers
             DateTime currentTime = DateTime.Now;
             Bitmap background = drawer.Draw();
             string title = $"{currentTime:MM.dd HH-mm-ss} {drawer.GetConfig()}.png";
-            string path = Path.GetFullPath(Path.Combine(outputFolder, title));
+            string folderPath = Path.GetFullPath(
+                ContextConfig.GetInstance().EnvironmentSettings.SaveFolderPath);
+            string path = Path.GetFullPath(Path.Combine(folderPath, title));
             
             background.Save(path);
 
@@ -233,7 +229,7 @@ namespace WeirdWallpaperGenerator.Controllers
             var about = ContextConfig.GetInstance().About;
             return  $"{about.ProjectName}\n" +
                     $"version: {about.Version}\n" +
-                    $"release date: {about.UpdateDate}\n" +
+                    $"release date: {about.ReleaseDate}\n" +
                     $"author: {about.Author}";
         }
     }

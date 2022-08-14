@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using WeirdWallpaperGenerator.DTO;
+using WeirdWallpaperGenerator.Enums.Drawers;
 using WeirdWallpaperGenerator.Helpers;
 
 namespace WeirdWallpaperGenerator.Services.Drawers
@@ -81,21 +82,6 @@ namespace WeirdWallpaperGenerator.Services.Drawers
 
         private Direction _direction;
         private CornerPosition _startPosition;
-
-        private enum Direction
-        {
-            ToLeftUp,
-            ToRightUp,
-            ToRightDown,
-            ToLeftDown
-        }
-        public enum CornerPosition
-        {
-            LeftUp,
-            RightUp,
-            RightDown,
-            LeftDown
-        }
 
         private Color _currentColor;
         private Color _fillInsideColor;
