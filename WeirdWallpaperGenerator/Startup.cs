@@ -38,7 +38,7 @@ namespace WeirdWallpaperGenerator
         {
             if (await _updater.ShouldUpdate())
             {
-                await _updater.GetUpdate(_updater.ReleaseFolderName, _updater.TempPath);
+                await _updater.GetUpdate(_updater.ReleaseFolderName, _updater.UpdatePath);
             }
             ShouldUpdateOnExit();
         }

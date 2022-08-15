@@ -2,9 +2,9 @@
 using System;
 using System.IO;
 using System.Text;
-//using System.Text.Json;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Services;
+using WeirdWallpaperGenerator.Services.Serialization;
 
 namespace WeirdWallpaperGenerator.Configuration
 {
@@ -15,9 +15,10 @@ namespace WeirdWallpaperGenerator.Configuration
     {
         static private ContextConfig instance;
         private Config Config { get; }
-        private const string fileName = "config.json";
+        private const string configFileName = "config.json";
 
         static private SystemMessagePrinter _printer;
+        static private JsonSerializationService _jsonSerializationService;
 
         public About About => Config.About;
         public EnvironmentSettings EnvironmentSettings => Config.EnvironmentSettings;
@@ -30,7 +31,6 @@ namespace WeirdWallpaperGenerator.Configuration
         private ContextConfig(Config config) 
         {
             Config = config;
-            _printer = SystemMessagePrinter.GetInstance();
         }
 
         public static ContextConfig GetInstance()
@@ -38,7 +38,8 @@ namespace WeirdWallpaperGenerator.Configuration
             if (instance == null)
             {
                 _printer = SystemMessagePrinter.GetInstance();
-                if (!File.Exists(fileName))
+                _jsonSerializationService = new JsonSerializationService();
+                if (!File.Exists(configFileName))
                 {
                     instance = new ContextConfig(new Config());
                     Save();
@@ -47,14 +48,8 @@ namespace WeirdWallpaperGenerator.Configuration
                 {
                     try
                     {
-                        using (StreamReader file = File.OpenText(fileName))
-                        {
-                            JsonSerializer serializer = new JsonSerializer() { 
-                                DateFormatString = "dd.MM.yyyy"
-                            };
-                            Config cfg = (Config)serializer.Deserialize(file, typeof(Config));
-                            instance = new ContextConfig(cfg);
-                        }
+                        Config cfg = (Config)_jsonSerializationService.Deserialize(configFileName, typeof(Config));
+                        instance = new ContextConfig(cfg);
                     }
                     catch (Exception ex)
                     {
@@ -70,23 +65,15 @@ namespace WeirdWallpaperGenerator.Configuration
             return instance;
         }
 
-        public static void Save(Config cfg = null)
+        public static void Save(Config cfg = null, string path = "")
         {
             if (cfg == null)
                 cfg = instance.Config;
 
-            using (FileStream fs = new FileStream(fileName, FileMode.Create))
-            {
-                var settings = new JsonSerializerSettings()
-                {
-                    DateFormatString = "dd.MM.yyyy",
-                    ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                    Formatting = Formatting.Indented
-                    //NullValueHandling = NullValueHandling.Ignore
-                };
-                string json = JsonConvert.SerializeObject(cfg, settings);
-                fs.Write(new UTF8Encoding(true).GetBytes(json));
-            }
+            if (string.IsNullOrEmpty(path))
+                path = configFileName;
+
+            _jsonSerializationService.Serialize(path, cfg);
         }
     }
 }

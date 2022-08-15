@@ -1,12 +1,12 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
-namespace WeirdWallpaperGenerator.Services
+namespace WeirdWallpaperGenerator.Services.Serialization
 {
-    public class SerializationService
+    public class BinarySerializationService
     {
         readonly BinaryFormatter _formatter;
-        public SerializationService()
+        public BinarySerializationService()
         {
             _formatter = new BinaryFormatter();
         }

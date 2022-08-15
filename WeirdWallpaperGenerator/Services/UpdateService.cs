@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Models;
+using WeirdWallpaperGenerator.Services.Serialization;
 
 namespace WeirdWallpaperGenerator.Services
 {
@@ -30,14 +31,16 @@ namespace WeirdWallpaperGenerator.Services
         public string ReleaseFolderName => "Release build";
 
         string ConfigPath => Path.Combine(ReleaseFolderName, configFileName);
-        public string TempPath => Path.Combine(Path.GetTempPath(), ReleaseFolderName);
+        public string UpdatePath => Path.Combine(Path.GetTempPath(), ReleaseFolderName);
+        public string UpdateConfigFilePath => Path.Combine(UpdatePath, configFileName);
 
         readonly string _mainUrl;
 
         static readonly string[] positiveAnswers = new string[] { "y", "yes" };
         static readonly string[] negativeAnswers = new string[] { "n", "no" };
 
-        SerializationService _serializationService = new SerializationService();
+        BinarySerializationService _serializationService = new BinarySerializationService();
+        JsonSerializationService _jsonSerializationService = new JsonSerializationService();
 
         public UpdateService()
         {
@@ -63,9 +66,8 @@ namespace WeirdWallpaperGenerator.Services
             if (lastDateUpdate.AddDays(_contextConfig.UpdaterSettings.CheckPeriodDays) > DateTime.Now.Date)
                 return false;
 
-
             DeleteTempPath();
-            await GetUpdate(ConfigPath, TempPath);
+            await GetUpdate(ConfigPath, UpdatePath);
 
             Config configOfUpdate = GetConfigFromUpdateFolder();
             // compare it with current
@@ -78,8 +80,6 @@ namespace WeirdWallpaperGenerator.Services
         /// <returns>true if all needed files was downloaded, integrity is ensured</returns>
         public bool IsUpdateReady()
         {
-            // todo: probably need to check if all needed files was downloaded - nothing lost
-
             // that files somewhy changes they content so hash changed anyway
             string[] excludeFileNames = new string[] 
             { 
@@ -87,8 +87,8 @@ namespace WeirdWallpaperGenerator.Services
                 "WeirdWallpaperGenerator.runtimeconfig.json" 
             };
 
-            HashTable hashtable = (HashTable)_serializationService.Deserialize(Path.Combine(TempPath, hashTableFileName));
-            Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(TempPath, new string[] { configFileName, hashTableFileName });
+            HashTable hashtable = (HashTable)_serializationService.Deserialize(Path.Combine(UpdatePath, hashTableFileName));
+            Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(UpdatePath, new string[] { configFileName, hashTableFileName });
             foreach(var hashPair in hashesFromUpdateFolder)
             {
                 if (excludeFileNames.Contains(hashPair.Value))
@@ -125,7 +125,7 @@ namespace WeirdWallpaperGenerator.Services
                 // TODO: start cmd process of cutting-pasting-deleting-running procces of updation here
                 Console.WriteLine("update started");
                 //CopyUpdateToWorkFolder();
-                context.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
+                //context.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
                 // TODO: need to save config.json to update information
                 Environment.Exit(0);
             }
@@ -133,12 +133,7 @@ namespace WeirdWallpaperGenerator.Services
 
         private Config GetConfigFromUpdateFolder()
         {
-            using (StreamReader file = File.OpenText("test.json"))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                return (Config)serializer
-                    .Deserialize(file, typeof(Config));
-            }
+            return (Config)_jsonSerializationService.Deserialize(UpdateConfigFilePath, typeof(Config));
         }
 
         public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave, List<string> hashesToExclude = null)
@@ -156,16 +151,14 @@ namespace WeirdWallpaperGenerator.Services
 
         public void CopyUpdateToWorkFolder()
         {
-            Process.Start("cmd.exe", $@"move {TempPath} {Environment.CurrentDirectory}"); //&& what's new.txt");
+            Process.Start("cmd.exe", $@"move {UpdatePath} {Environment.CurrentDirectory}"); // TODO: && "what's new.txt");
         }
 
         private async Task Download(string url, string path)
         {
             var response = await _client.GetAsync(url);
             Directory.CreateDirectory(Path.GetDirectoryName(path));
-            using (var fs = new FileStream(
-                path,
-                FileMode.Create))
+            using (var fs = new FileStream(path, FileMode.Create))
             {
                 await response.Content.CopyToAsync(fs);
             }
@@ -227,9 +220,9 @@ namespace WeirdWallpaperGenerator.Services
 
         private void DeleteTempPath()
         {
-            if (Directory.Exists(TempPath))
+            if (Directory.Exists(UpdatePath))
             {
-                Directory.Delete(TempPath, true);
+                Directory.Delete(UpdatePath, true);
             }
         }
 

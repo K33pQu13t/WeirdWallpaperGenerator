@@ -1,11 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Models;
+using WeirdWallpaperGenerator.Services.Serialization;
 
 namespace WeirdWallpaperGenerator.Services
 {
@@ -19,7 +19,8 @@ namespace WeirdWallpaperGenerator.Services
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
 
         SystemMessagePrinter _printer;
-        SerializationService _serializationService = new SerializationService();
+        BinarySerializationService _binarySerializationService = new BinarySerializationService();
+        JsonSerializationService _jsonSerializationService = new JsonSerializationService();
 
         internal enum VersionStack
         {
@@ -38,16 +39,18 @@ namespace WeirdWallpaperGenerator.Services
             RemoveGarbage();
             GenerateHashTable();
             IncrementVersion(versionUpdate);
+            SetReleaseDate();
         }
 
         internal void GenerateHashTable()
         {
             HashTable hashTable = new HashTable
             {
+                Version = ContextConfig.GetInstance().About.Version,
                 Table = HashHelper.GetSHA1ChecksumFromFolder(buildFolder, new string[] { configFileName, hashTableFileName })
             };
 
-            _serializationService.Serialize(Path.Combine(buildFolder, hashTableFileName).ToString(), hashTable);
+            _binarySerializationService.Serialize(Path.Combine(buildFolder, hashTableFileName).ToString(), hashTable);
             _printer.PrintLog("Hash table created");
         }
 
@@ -65,7 +68,7 @@ namespace WeirdWallpaperGenerator.Services
 
             var stacks = config.About.Version.Split('.');
             string newStack = (Convert.ToInt32(stacks[(int)stack])
-                +1).ToString();
+                + 1).ToString();
 
 
             List<string> newVersion = new List<string>();
@@ -81,14 +84,16 @@ namespace WeirdWallpaperGenerator.Services
             ContextConfig.Save(config);
         }
 
-        private Configuration.Config GetConfigFromBuildFolder()
+        private void SetReleaseDate()
         {
-            using (StreamReader file = File.OpenText("test.json"))
-            {
-                JsonSerializer serializer = new JsonSerializer();
-                return (Configuration.Config)serializer
-                    .Deserialize(file, typeof(Configuration.Config));
-            }
+            var config = GetConfigFromBuildFolder();
+            config.About.ReleaseDate = DateTime.Now;
+            ContextConfig.Save(config, configFilePath);
         }
+
+        private Config GetConfigFromBuildFolder()
+        {
+            return (Config)_jsonSerializationService.Deserialize(configFilePath, typeof(Config));
+        } 
     }
 }

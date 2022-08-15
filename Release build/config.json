@@ -1,32 +1,27 @@
 {
   "About": {
-    "ProjectName": "Weird wallpaper generator",
-    "Version": "1.0.0",
-    "UpdateDate": "07.08.2022"
+    "Version": "1.0.1",
+    "ReleaseDate": "15.08.2022"
   },
-
-  "UpdaterConfig": {
+  "EnvironmentSettings": {
+    "SaveFolderPath": "backgrounds"
+  },
+  "UpdaterSettings": {
     "AutoCheckUpdates": true,
-    "AskBeforeUpdate": false,
-    "CheckPeriodDays": 14
+    "AskBeforeUpdate": true,
+    "CheckPeriodDays": 14,
+    "LastUpdateDate": "14.08.2022"
   },
-
-  //"colors": [
-  //  {
-  //    "Title": "dark set 1",
-  //    "Path": "C:\\Dirs\\My codes\\C sharp\\Projects\\FractalGenerator\\bin\\Debug\\netcoreapp3.1\\colors\\darker colors.txt"
-  //  },
-  //  {
-  //    "Title": "dark set 2",
-  //    "Path": "C:\\Dirs\\My codes\\C sharp\\Projects\\FractalGenerator\\bin\\Debug\\netcoreapp3.1\\colors\\lighter colors.txt"
-  //  }
-  //],
-  "colorSet1": {
-    "Title": "dark set 1",
-    "Path": "C:\\Dirs\\My codes\\C sharp\\Projects\\FractalGenerator\\bin\\Debug\\netcoreapp3.1\\colors\\darker colors.txt"
-  },
-  "colorSet2": {
-    "Title": "dark set 2",
-    "Path": "C:\\Dirs\\My codes\\C sharp\\Projects\\FractalGenerator\\bin\\Debug\\netcoreapp3.1\\colors\\lighter colors.txt"
+  "ColorsSets": {
+    "Sets": [
+      {
+        "Title": "dark colors 1",
+        "Path": "Colors\\darker colors.txt"
+      },
+      {
+        "Title": "dark colors 2",
+        "Path": "Colors\\lighter colors.txt"
+      }
+    ]
   }
 }
