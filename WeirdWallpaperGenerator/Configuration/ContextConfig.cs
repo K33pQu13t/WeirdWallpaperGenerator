@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using WeirdWallpaperGenerator.Models;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Serialization;
 
@@ -26,6 +27,13 @@ namespace WeirdWallpaperGenerator.Configuration
         public ColorsSets ColorsSets => Config.ColorsSets;
 
         public bool ShouldUpdateOnExit { get; set; }
+        /// <summary>
+        /// latest version ready to update
+        /// </summary>
+        public HashTable UpdateHashTable { get; set; }
+        /// <summary>
+        /// wait for it to ensure the update is fully downloaded
+        /// </summary>
         public Task UpdateLoading { get; set; }
 
         private ContextConfig(Config config) 

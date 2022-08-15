@@ -8,7 +8,7 @@ namespace WeirdWallpaperGenerator.Services.Serialization
 {
     class JsonSerializationService
     {
-        string _dateFormatString => "dd.MM.yyyy";
+        string DateFormatString => "dd.MM.yyyy";
 
         public object Deserialize(string filePath, Type type)
         {
@@ -16,7 +16,7 @@ namespace WeirdWallpaperGenerator.Services.Serialization
             {
                 JsonSerializer serializer = new JsonSerializer() 
                 {
-                    DateFormatString = _dateFormatString
+                    DateFormatString = DateFormatString
                 };
                 return serializer.Deserialize(file, type);
             }
@@ -28,7 +28,7 @@ namespace WeirdWallpaperGenerator.Services.Serialization
             {
                 var settings = new JsonSerializerSettings()
                 {
-                    DateFormatString = _dateFormatString,
+                    DateFormatString = DateFormatString,
                     ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
                     Formatting = Formatting.Indented
                     //NullValueHandling = NullValueHandling.Ignore

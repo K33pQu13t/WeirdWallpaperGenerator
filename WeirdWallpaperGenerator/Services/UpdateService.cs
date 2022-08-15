@@ -32,18 +32,23 @@ namespace WeirdWallpaperGenerator.Services
 
         string ConfigPath => Path.Combine(ReleaseFolderName, configFileName);
         public string UpdatePath => Path.Combine(Path.GetTempPath(), ReleaseFolderName);
-        public string UpdateConfigFilePath => Path.Combine(UpdatePath, configFileName);
+        public string ConfigFileUpdatePath => Path.Combine(UpdatePath, configFileName);
+        public string HashTableFileUpdatePath => Path.Combine(UpdatePath, hashTableFileName);
 
         readonly string _mainUrl;
 
-        static readonly string[] positiveAnswers = new string[] { "y", "yes" };
-        static readonly string[] negativeAnswers = new string[] { "n", "no" };
+        static readonly string[] positiveAnswers = new string[] { "y", "yes", "н" };
+        static readonly string[] negativeAnswers = new string[] { "n", "no", "т" };
 
         BinarySerializationService _serializationService = new BinarySerializationService();
         JsonSerializationService _jsonSerializationService = new JsonSerializationService();
+        SystemMessagePrinter _systemMessagePrinter;
+        ContextConfig _contextConfig = ContextConfig.GetInstance();
 
         public UpdateService()
         {
+            _systemMessagePrinter = SystemMessagePrinter.GetInstance();
+
             _client = new HttpClient();
             _client.DefaultRequestHeaders.UserAgent.Add(
                 new ProductInfoHeaderValue("Updater", "1"));
@@ -57,7 +62,6 @@ namespace WeirdWallpaperGenerator.Services
         /// <returns></returns>
         public async Task<bool> ShouldUpdate()
         {
-            var _contextConfig = ContextConfig.GetInstance();
             if (!_contextConfig.UpdaterSettings.AutoCheckUpdates)
                 return false;
 
@@ -71,7 +75,7 @@ namespace WeirdWallpaperGenerator.Services
 
             Config configOfUpdate = GetConfigFromUpdateFolder();
             // compare it with current
-            return VersionComparer(ContextConfig.GetInstance().About.Version, configOfUpdate.About.Version) == 1;
+            return VersionComparer(_contextConfig.About.Version, configOfUpdate.About.Version) == 1;
         }
 
         /// <summary>
@@ -87,7 +91,7 @@ namespace WeirdWallpaperGenerator.Services
                 "WeirdWallpaperGenerator.runtimeconfig.json" 
             };
 
-            HashTable hashtable = (HashTable)_serializationService.Deserialize(Path.Combine(UpdatePath, hashTableFileName));
+            HashTable hashtable = (HashTable)_serializationService.Deserialize(HashTableFileUpdatePath);
             Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(UpdatePath, new string[] { configFileName, hashTableFileName });
             foreach(var hashPair in hashesFromUpdateFolder)
             {
@@ -98,22 +102,29 @@ namespace WeirdWallpaperGenerator.Services
                 if (!hashtable.Table.ContainsKey(hashPair.Key))
                     return false;
             }
+
+            _contextConfig.UpdateHashTable = hashtable;
             return true;
         }
 
         public async Task CheckUpdateBeforeExit()
         {
-            var context = ContextConfig.GetInstance();
             // wait for update to download
-            await context.UpdateLoading;
+            if (_contextConfig.UpdateLoading != null)
+                await _contextConfig.UpdateLoading;
 
-            if (context.ShouldUpdateOnExit)
+            if (_contextConfig.ShouldUpdateOnExit)
             {
-                if (context.UpdaterSettings.AskBeforeUpdate)
+                if (_contextConfig.UpdaterSettings.AskBeforeUpdate)
                 {
-                    Console.WriteLine("A new version of the programm is ready. Update it? (y/n)");
+                    _systemMessagePrinter.PrintWarning(
+                        $"A new version {_contextConfig.UpdateHashTable.Version} of the programm is ready " +
+                        $"(your's is {_contextConfig.About.Version}). " +
+                        $"Do you want to update it? (y/n)", 
+                        putPrefix: false);
                     string answer = string.Empty;
-                    while (!(positiveAnswers.Contains(answer) || negativeAnswers.Contains(answer)))
+                    while (!(positiveAnswers.Contains(answer.ToLower()) 
+                        || negativeAnswers.Contains(answer.ToLower())))
                     {
                         answer = Console.ReadLine();
                     }
@@ -133,7 +144,7 @@ namespace WeirdWallpaperGenerator.Services
 
         private Config GetConfigFromUpdateFolder()
         {
-            return (Config)_jsonSerializationService.Deserialize(UpdateConfigFilePath, typeof(Config));
+            return (Config)_jsonSerializationService.Deserialize(ConfigFileUpdatePath, typeof(Config));
         }
 
         public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave, List<string> hashesToExclude = null)
@@ -151,7 +162,10 @@ namespace WeirdWallpaperGenerator.Services
 
         public void CopyUpdateToWorkFolder()
         {
-            Process.Start("cmd.exe", $@"move {UpdatePath} {Environment.CurrentDirectory}"); // TODO: && "what's new.txt");
+            foreach(var hashPair in _contextConfig.UpdateHashTable.Table)
+            {
+                File.Delete(Path.GetFullPath(hashPair.Value));
+            }
         }
 
         private async Task Download(string url, string path)

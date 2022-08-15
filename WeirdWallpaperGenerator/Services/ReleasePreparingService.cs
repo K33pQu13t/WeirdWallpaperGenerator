@@ -13,8 +13,8 @@ namespace WeirdWallpaperGenerator.Services
     {
         const string buildFolder = @"..\..\..\..\Release build";
         const string configFileName = "config.json";
-        string configFilePath => Path.Combine(buildFolder, configFileName);
         const string hashTableFileName = "hashtable";
+        string ConfigFileBuildPath => Path.Combine(buildFolder, configFileName);
 
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
 
@@ -37,16 +37,17 @@ namespace WeirdWallpaperGenerator.Services
         internal void Prepare(VersionStack versionUpdate)
         {
             RemoveGarbage();
+            CopyConfigWithIncrementVersion(versionUpdate);
             GenerateHashTable();
-            IncrementVersion(versionUpdate);
             SetReleaseDate();
         }
 
         internal void GenerateHashTable()
         {
+            var config = GetConfigFromBuildFolder();
             HashTable hashTable = new HashTable
             {
-                Version = ContextConfig.GetInstance().About.Version,
+                Version = config.About.Version,
                 Table = HashHelper.GetSHA1ChecksumFromFolder(buildFolder, new string[] { configFileName, hashTableFileName })
             };
 
@@ -62,11 +63,12 @@ namespace WeirdWallpaperGenerator.Services
             }
         }
 
-        internal void IncrementVersion(VersionStack stack)
+        internal void CopyConfigWithIncrementVersion(VersionStack stack)
         {
-            var config = GetConfigFromBuildFolder();
+            // get current's develop config file
+            Config buildConfig = (Config)_jsonSerializationService.Deserialize(configFileName, typeof(Config));
 
-            var stacks = config.About.Version.Split('.');
+            var stacks = buildConfig.About.Version.Split('.');
             string newStack = (Convert.ToInt32(stacks[(int)stack])
                 + 1).ToString();
 
@@ -80,20 +82,20 @@ namespace WeirdWallpaperGenerator.Services
                     newVersion.Add(stacks[i]);
             }
 
-            config.About.Version = string.Join('.', newVersion);
-            ContextConfig.Save(config);
+            buildConfig.About.Version = string.Join('.', newVersion);
+            ContextConfig.Save(buildConfig, ConfigFileBuildPath);
         }
 
         private void SetReleaseDate()
         {
             var config = GetConfigFromBuildFolder();
             config.About.ReleaseDate = DateTime.Now;
-            ContextConfig.Save(config, configFilePath);
+            ContextConfig.Save(config, ConfigFileBuildPath);
         }
 
         private Config GetConfigFromBuildFolder()
         {
-            return (Config)_jsonSerializationService.Deserialize(configFilePath, typeof(Config));
+            return (Config)_jsonSerializationService.Deserialize(ConfigFileBuildPath, typeof(Config));
         } 
     }
 }

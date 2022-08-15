@@ -65,48 +65,53 @@ namespace WeirdWallpaperGenerator.Services
             return instance;
         }
 
-        internal void PrintError(string message)
+        private void Print(string message, ConsoleColor color)
         {
             semaphore.Wait();
-            Console.ForegroundColor = _errorColor == ConsoleColorNullable.Default 
+            Console.ForegroundColor = color;
+            Console.WriteLine(message);
+            Console.ResetColor();
+            semaphore.Release();
+        }
+
+        internal void PrintError(string message, bool putPrefix = true)
+        {
+            message = $"{(!string.IsNullOrWhiteSpace(_errorTitle) && putPrefix ? $"{_errorTitle}: " : "")}{message}";
+            ConsoleColor color = _errorColor == ConsoleColorNullable.Default 
                 ? Console.ForegroundColor 
                 : (ConsoleColor)_errorColor;
-            Console.WriteLine($"{(string.IsNullOrWhiteSpace(_errorTitle) ? "" : $"{_errorTitle}: ")}{message}");
-            Console.ResetColor();
-            semaphore.Release();
+
+            Print(message, color);
         }
 
-        internal void PrintWarning(string message)
+        internal void PrintWarning(string message, bool putPrefix = true)
         {
-            semaphore.Wait();
-            Console.ForegroundColor = _warningColor == ConsoleColorNullable.Default
+            message = $"{(!string.IsNullOrWhiteSpace(_warningTitle) && putPrefix ? $"{_warningTitle}: " : "")}{message}";
+            ConsoleColor color = _warningColor == ConsoleColorNullable.Default
                 ? Console.ForegroundColor
                 : (ConsoleColor)_warningColor;
-            Console.WriteLine($"{(string.IsNullOrWhiteSpace(_warningTitle) ? "" : $"{_warningTitle}: ")}{message}");
-            Console.ResetColor();
-            semaphore.Release();
+
+            Print(message, color);
         }
 
-        internal void PrintSuccess(string message)
+        internal void PrintSuccess(string message, bool putPrefix = true)
         {
-            semaphore.Wait();
-            Console.ForegroundColor = _successColor == ConsoleColorNullable.Default
+            message = $"{(!string.IsNullOrWhiteSpace(_successTitle) && putPrefix ? $"{_successTitle}: " : "")}{message}";
+            ConsoleColor color = _successColor == ConsoleColorNullable.Default
                 ? Console.ForegroundColor
                 : (ConsoleColor)_successColor;
-            Console.WriteLine($"{(string.IsNullOrWhiteSpace(_successTitle) ? "" : $"{_successTitle}: ")}{message}");
-            Console.ResetColor();
-            semaphore.Release();
+
+            Print(message, color);
         }
 
-        internal void PrintLog(string message)
+        internal void PrintLog(string message, bool putPrefix = true)
         {
-            semaphore.Wait();
-            Console.ForegroundColor = _logColor == ConsoleColorNullable.Default
+            message = $"{(!string.IsNullOrWhiteSpace(_logTitle) && putPrefix ? $"{_logTitle}: " : "")}{message}";
+            ConsoleColor color = _logColor == ConsoleColorNullable.Default
                 ? Console.ForegroundColor
                 : (ConsoleColor)_logColor;
-            Console.WriteLine($"{(string.IsNullOrWhiteSpace(_logTitle) ? "" : $"{_logTitle}: ")}{message}");
-            Console.ResetColor();
-            semaphore.Release();
+
+            Print(message, color);
         }
     }
 }
