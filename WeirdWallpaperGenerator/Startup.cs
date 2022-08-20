@@ -47,7 +47,8 @@ namespace WeirdWallpaperGenerator
 
         public void ShouldUpdateOnExit()
         {
-            if (_updater.IsUpdateReady()) {
+            if (_updater.IsUpdateReady()) 
+            {
                 ContextConfig.GetInstance().ShouldUpdateOnExit = true;
             }
         }

@@ -1,7 +1,7 @@
 {
   "About": {
     "Version": "1.0.1",
-    "ReleaseDate": "16.08.2022"
+    "ReleaseDate": "20.08.2022"
   },
   "EnvironmentSettings": {
     "SaveFolderPath": "backgrounds"
@@ -10,10 +10,26 @@
     "AutoCheckUpdates": true,
     "AskBeforeUpdate": true,
     "CheckPeriodDays": 14,
-    "LastUpdateDate": "14.08.2022"
+    "LastUpdateDate": "14.08.2021"
   },
   "ColorsSets": {
     "Sets": [
+      {
+        "Title": "dark colors 1",
+        "Path": "Colors\\darker colors.txt"
+      },
+      {
+        "Title": "dark colors 2",
+        "Path": "Colors\\lighter colors.txt"
+      },
+      {
+        "Title": "dark colors 1",
+        "Path": "Colors\\darker colors.txt"
+      },
+      {
+        "Title": "dark colors 2",
+        "Path": "Colors\\lighter colors.txt"
+      },
       {
         "Title": "dark colors 1",
         "Path": "Colors\\darker colors.txt"

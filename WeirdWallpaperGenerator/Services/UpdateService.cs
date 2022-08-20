@@ -103,7 +103,7 @@ namespace WeirdWallpaperGenerator.Services
                     return false;
             }
 
-            _contextConfig.UpdateHashTable = hashtable;
+            _contextConfig.VersionFromUpdate = hashtable.Version;
             return true;
         }
 
@@ -118,7 +118,7 @@ namespace WeirdWallpaperGenerator.Services
                 if (_contextConfig.UpdaterSettings.AskBeforeUpdate)
                 {
                     _systemMessagePrinter.PrintWarning(
-                        $"A new version {_contextConfig.UpdateHashTable.Version} of the programm is ready " +
+                        $"A new version {_contextConfig.VersionFromUpdate} of the programm is ready " +
                         $"(your's is {_contextConfig.About.Version}). " +
                         $"Do you want to update it? (y/n)", 
                         putPrefix: false);
@@ -134,8 +134,8 @@ namespace WeirdWallpaperGenerator.Services
                 }
 
                 // TODO: start cmd process of cutting-pasting-deleting-running procces of updation here
-                Console.WriteLine("update started");
-                //CopyUpdateToWorkFolder();
+                _systemMessagePrinter.PrintLog("update started");
+                CopyUpdateToWorkFolder();
                 //context.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
                 // TODO: need to save config.json to update information
                 Environment.Exit(0);
@@ -162,10 +162,78 @@ namespace WeirdWallpaperGenerator.Services
 
         public void CopyUpdateToWorkFolder()
         {
-            foreach(var hashPair in _contextConfig.UpdateHashTable.Table)
+            var files = Directory.GetFiles(UpdatePath)
+                .Where(fileName => !(new string[] { 
+                    //"config.json", 
+                    "hashtable"
+                }).Contains(Path.GetFileName(fileName))).ToList();
+
+            string commands = string.Join('\n',
+                GenerateDeletionCommand(files, AppDomain.CurrentDomain.BaseDirectory),
+                GenerateCopyCommand(files, AppDomain.CurrentDomain.BaseDirectory),
+                GenerateCleanup()
+                );
+
+            using (StreamWriter sw = new StreamWriter(Path.Combine(UpdatePath, "update.bat"), false))
             {
-                File.Delete(Path.GetFullPath(hashPair.Value));
+                sw.Write(GenerateFinalCommand(commands));
             }
+            ProcessStartInfo startInfo = new ProcessStartInfo(Path.Combine(UpdatePath, "update.bat"))
+            {
+                UseShellExecute = true,
+                CreateNoWindow = true
+            };
+            Process.Start(startInfo);
+
+            //process.WaitForExit();
+            Environment.Exit(0);
+        }
+
+        private string GetDeleteCommand()
+        {
+            return "del /f /q";
+        }
+
+        private string GetCopyCommand()
+        {
+            return "copy /y";
+        }
+
+        private string GenerateDeletionCommand(List<string> filesToDelete, string pathWhereDelete)
+        {
+            List<string> commands = new List<string>();
+            foreach (var filePath in filesToDelete)
+            {
+                var fileName = Path.GetFileName(filePath);
+                commands.Add($"{GetDeleteCommand()} " +
+                    $"\"{Path.GetFullPath(Path.Combine(pathWhereDelete, fileName))}\"");
+            }
+
+            return string.Join("\n", commands);
+        }
+
+        private string GenerateCopyCommand(List<string> filesToCopy, string pathWhereCopy)
+        {
+            List<string> commands = new List<string>();
+            foreach (var filePath in filesToCopy)
+            {
+                var fileName = Path.GetFileName(filePath);
+                commands.Add($"{GetCopyCommand()} " +
+                    $"\"{filePath}\" " +
+                    $"\"{Path.GetFullPath(Path.Combine(pathWhereCopy, fileName))}\"");
+            }
+
+            return string.Join("\n", commands);
+        }
+
+        private string GenerateCleanup()
+        {
+            return $"rmdir /s /q \"{UpdatePath}\"";
+        }
+        
+        private string GenerateFinalCommand(string commands)
+        {
+            return $"echo @off timeout /t 1\n{commands}";
         }
 
         private async Task Download(string url, string path)
