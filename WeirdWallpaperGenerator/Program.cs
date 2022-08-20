@@ -21,15 +21,16 @@ namespace WeirdWallpaperGenerator
 
             MainController controller = new MainController();
 
+            SystemMessagePrinter.GetInstance().PrintLog($"version {context.About.Version}");
 
             // do not need to wait for it now, let it be on a background
-            //context.UpdateLoading = startup.CheckUpdates();
+            context.UpdateLoading = startup.CheckUpdates();
 
             //controller.ExecuteCommand(args);
             //controller.ExecuteCommand(new string[] { "/g -m p -s" });
-            controller.ExecuteCommand(new string[] { "/pb" });
+            //controller.ExecuteCommand(new string[] { "/pb" });
 
-            //await _updater.CheckUpdateBeforeExit();
+            await _updater.CheckUpdateBeforeExit();
         }
     }
 }
