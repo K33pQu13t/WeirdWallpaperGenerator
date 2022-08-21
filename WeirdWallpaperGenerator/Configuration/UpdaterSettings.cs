@@ -11,6 +11,6 @@ namespace WeirdWallpaperGenerator.Configuration
 
         public int CheckPeriodDays { get; set; } = 9;
 
-        public DateTime LastUpdateDate { get; set; } = DateTime.Now;
+        public DateTime LastUpdateCheckDate { get; set; } = DateTime.Now;
     }
 }

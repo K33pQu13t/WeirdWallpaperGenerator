@@ -65,7 +65,7 @@ namespace WeirdWallpaperGenerator.Controllers
             string commandLine = string.Join(" ", commandLineArray);
             List<string> commandList = commandLine.ToLower().SplitToArguments().ToList();
 
-            string methodValue = commandList.GetFlagValue(flagMethod); // TODO: check for -method
+            string methodValue = commandList.GetFlagValue(flagMethod);
 
             if (commandLine == about)
             {

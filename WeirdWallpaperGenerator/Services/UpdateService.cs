@@ -80,6 +80,8 @@ namespace WeirdWallpaperGenerator.Services
             }
             else if (isManual)
                 _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
+
+            _contextConfig.UpdaterSettings.LastUpdateCheckDate = DateTime.Now.Date;
         }
 
         public async Task ShouldUpdateOnExit()
@@ -103,7 +105,7 @@ namespace WeirdWallpaperGenerator.Services
                 return false;
 
             // if its not time yet - skip
-            var lastDateUpdate = _contextConfig.UpdaterSettings.LastUpdateDate;
+            var lastDateUpdate = _contextConfig.UpdaterSettings.LastUpdateCheckDate;
             if (lastDateUpdate.AddDays(_contextConfig.UpdaterSettings.CheckPeriodDays) > DateTime.Now.Date
                 && !isManual)
                 return false;
@@ -294,7 +296,6 @@ namespace WeirdWallpaperGenerator.Services
         private void UpdateConfig()
         {
             Config configOfUpdate = GetConfigFromUpdateFolder();
-            _contextConfig.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
             _contextConfig.About.Version = configOfUpdate.About.Version;
             _contextConfig.About.ReleaseDate = configOfUpdate.About.ReleaseDate;
             ContextConfig.Save();
