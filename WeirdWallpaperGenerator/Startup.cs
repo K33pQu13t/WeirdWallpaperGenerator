@@ -10,8 +10,6 @@ namespace WeirdWallpaperGenerator
 {
     public class Startup
     {
-        UpdateService _updater;
-
         public void Run()
         {
             Configure();
@@ -30,27 +28,8 @@ namespace WeirdWallpaperGenerator
                 Enums.ConsoleColorNullable.Green,
                 Enums.ConsoleColorNullable.Cyan);
 
-
-            _updater = new UpdateService();
             // gets config if its exist, sets it by default if not
             ContextConfig.GetInstance();
-        }
-
-        public async Task CheckUpdates()
-        {
-            if (await _updater.ShouldUpdate())
-            {
-                await _updater.GetUpdate(_updater.ReleaseFolderName, _updater.UpdatePath);
-                ShouldUpdateOnExit();
-            }
-        }
-
-        public void ShouldUpdateOnExit()
-        {
-            if (_updater.IsUpdateReady()) 
-            {
-                ContextConfig.GetInstance().ShouldUpdateOnExit = true;
-            }
         }
     }
 }

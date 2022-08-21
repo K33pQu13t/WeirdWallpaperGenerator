@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Models;
@@ -14,7 +15,12 @@ namespace WeirdWallpaperGenerator.Services
         const string buildFolder = @"..\..\..\..\Release build";
         const string configFileName = "config.json";
         const string hashTableFileName = "hashtable";
+
+        const string colorsFolderName = "colors";
+
         string ConfigFileBuildPath => Path.Combine(buildFolder, configFileName);
+        string ColorsFolderBuildPath => Path.Combine(buildFolder, colorsFolderName);
+        string ColorsFolderDevPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, colorsFolderName);
 
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
 
@@ -37,9 +43,10 @@ namespace WeirdWallpaperGenerator.Services
         internal void Prepare(VersionStack versionUpdate)
         {
             RemoveGarbage();
+            //CopyColors();
             CopyConfigWithIncrementVersion(versionUpdate);
-            GenerateHashTable();
             SetReleaseDate();
+            GenerateHashTable();
         }
 
         internal void GenerateHashTable()
@@ -52,7 +59,21 @@ namespace WeirdWallpaperGenerator.Services
             };
 
             _binarySerializationService.Serialize(Path.Combine(buildFolder, hashTableFileName).ToString(), hashTable);
+
             _printer.PrintLog("Hash table created");
+        }
+
+        internal void CopyColors()
+        {
+            RemoveDuplicatedColors();
+            Directory.CreateDirectory(ColorsFolderBuildPath);
+            var colorsPaths = Directory.GetFiles(ColorsFolderDevPath);
+            foreach (var path in colorsPaths)
+            {
+                var saveFilePath = Path.Combine(ColorsFolderBuildPath, Path.GetFileName(path));
+                File.Copy(ColorsFolderDevPath, saveFilePath, true);
+            }
+            _printer.PrintLog("Colors copied");
         }
 
         internal void RemoveGarbage()
@@ -61,6 +82,24 @@ namespace WeirdWallpaperGenerator.Services
             {
                 File.Delete(Path.Combine(buildFolder, fileNameToDelete));
             }
+            _printer.PrintLog("Garbage removed");
+        }
+
+        internal void RemoveDuplicatedColors()
+        {
+            var files = Directory.GetFiles("colors");
+            foreach (var file in files)
+            {
+                var colors = File.ReadAllLines(file);
+                colors = colors.Select(c => c.ToLower()).ToArray();
+                colors = colors.Distinct().ToArray();
+                using (StreamWriter sw = new StreamWriter(file, false))
+                {
+                    sw.Write(string.Join('\n', colors));
+                }
+            }
+
+            _printer.PrintLog("Duplicated colors removed");
         }
 
         internal void CopyConfigWithIncrementVersion(VersionStack stack)
@@ -84,6 +123,8 @@ namespace WeirdWallpaperGenerator.Services
 
             buildConfig.About.Version = string.Join('.', newVersion);
             ContextConfig.Save(buildConfig, ConfigFileBuildPath);
+
+            _printer.PrintLog("Version incremented");
         }
 
         private void SetReleaseDate()
@@ -91,11 +132,13 @@ namespace WeirdWallpaperGenerator.Services
             var config = GetConfigFromBuildFolder();
             config.About.ReleaseDate = DateTime.Now;
             ContextConfig.Save(config, ConfigFileBuildPath);
+
+            _printer.PrintLog("Release date setted");
         }
 
         private Config GetConfigFromBuildFolder()
         {
             return (Config)_jsonSerializationService.Deserialize(ConfigFileBuildPath, typeof(Config));
-        } 
+        }
     }
 }

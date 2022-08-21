@@ -26,8 +26,10 @@ namespace WeirdWallpaperGenerator.Configuration
         public UpdaterSettings UpdaterSettings => Config.UpdaterSettings;
         public ColorsSets ColorsSets => Config.ColorsSets;
 
-        public bool ShouldUpdateOnExit { get; set; } = true; //TODO отладка удали true
+        public bool ShouldUpdateOnExit { get; set; }
+        public bool UpdateCorrupted { get; set; }
         public string VersionFromUpdate { get; set; }
+
         /// <summary>
         /// wait for it to ensure the update is fully downloaded
         /// </summary>

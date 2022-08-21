@@ -6,7 +6,7 @@ namespace WeirdWallpaperGenerator.Helpers
     { 
         public static string ToHex(this Color color)
         {
-            return "#" + color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2");
+            return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
         }
 
         public static Color ToColor(this string hexColor)

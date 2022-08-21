@@ -2,7 +2,7 @@
 {
     public enum ConsoleColorNullable
     {
-        Default = -1,
+        Null = -1,
         Black = 0,
         DarkBlue = 1,
         DarkGreen = 2,

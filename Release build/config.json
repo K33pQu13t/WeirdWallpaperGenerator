@@ -1,7 +1,7 @@
 {
   "About": {
     "Version": "1.0.1",
-    "ReleaseDate": "20.08.2022"
+    "ReleaseDate": "21.08.2022"
   },
   "EnvironmentSettings": {
     "SaveFolderPath": "backgrounds"
@@ -9,34 +9,54 @@
   "UpdaterSettings": {
     "AutoCheckUpdates": true,
     "AskBeforeUpdate": true,
-    "CheckPeriodDays": 14,
-    "LastUpdateDate": "14.08.2021"
+    "CheckPeriodDays": 9,
+    "LastUpdateDate": "21.08.2022"
   },
   "ColorsSets": {
     "Sets": [
       {
-        "Title": "dark colors 1",
-        "Path": "Colors\\darker colors.txt"
+        "Title": "black",
+        "Path": "Colors\\black.txt"
       },
       {
-        "Title": "dark colors 2",
-        "Path": "Colors\\lighter colors.txt"
+        "Title": "blue",
+        "Path": "Colors\\blue.txt"
       },
       {
-        "Title": "dark colors 1",
-        "Path": "Colors\\darker colors.txt"
+        "Title": "brown",
+        "Path": "Colors\\brown.txt"
       },
       {
-        "Title": "dark colors 2",
-        "Path": "Colors\\lighter colors.txt"
+        "Title": "gray",
+        "Path": "Colors\\gray.txt"
       },
       {
-        "Title": "dark colors 1",
-        "Path": "Colors\\darker colors.txt"
+        "Title": "green",
+        "Path": "Colors\\green.txt"
       },
       {
-        "Title": "dark colors 2",
-        "Path": "Colors\\lighter colors.txt"
+        "Title": "orange",
+        "Path": "Colors\\orange.txt"
+      },
+      {
+        "Title": "pink",
+        "Path": "Colors\\pink.txt"
+      },
+      {
+        "Title": "purple",
+        "Path": "Colors\\purple.txt"
+      },
+      {
+        "Title": "red",
+        "Path": "Colors\\red.txt"
+      },
+      {
+        "Title": "white",
+        "Path": "Colors\\white.txt"
+      },
+      {
+        "Title": "yellow",
+        "Path": "Colors\\yellow.txt"
       }
     ]
   }

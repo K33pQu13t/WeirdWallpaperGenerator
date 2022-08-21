@@ -19,21 +19,26 @@ namespace WeirdWallpaperGenerator.Services
     public class UpdateService
     {
         HttpClient _client;
-        const string contentsUrlTemplate = "https://api.github.com/repos/{0}/contents"; //?ref=master";
-        //const string branch = "?ref=master";
-        const string branch = "?ref=feature/add_auto_updater";
-        const string _repo = "K33pQu13t/WeirdWallpaperGenerator";
+        private const string contentsUrlTemplate = "https://api.github.com/repos/{0}/contents";
+        private const string branch = "?ref=feature/add_auto_updater"; //"?ref=master";
+        private const string _repo = "K33pQu13t/WeirdWallpaperGenerator";
 
-
-        const string configFileName = "config.json";
-        const string hashTableFileName = "hashtable";
+        private const string configFileName = "config.json";
+        private const string hashTableFileName = "hashtable";
+        private const string pdbFile = "WeirdWallpaperGenerator.pdb";
+        private const string updateButchFile = "update.bat";
+        private const string whatsNewFile = "what's new.txt";
 
         public string ReleaseFolderName => "Release build";
+
+        private const int countOfDownloadsRetry = 1;
 
         string ConfigPath => Path.Combine(ReleaseFolderName, configFileName);
         public string UpdatePath => Path.Combine(Path.GetTempPath(), ReleaseFolderName);
         public string ConfigFileUpdatePath => Path.Combine(UpdatePath, configFileName);
         public string HashTableFileUpdatePath => Path.Combine(UpdatePath, hashTableFileName);
+        private string UpdateBatchFilePath => Path.Combine(UpdatePath, updateButchFile);
+        private string WhatsNewFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, whatsNewFile);
 
         readonly string _mainUrl;
 
@@ -57,21 +62,55 @@ namespace WeirdWallpaperGenerator.Services
         }
 
         /// <summary>
+        /// checks if there is a need of update and download it if needed
+        /// </summary>
+        /// <param name="isManual">true if updating from /update command, not automatically</param>
+        /// <returns></returns>
+        public async Task CheckUpdates(bool isManual = false)
+        {
+            _systemMessagePrinter.PrintLog("CheckUpdates");
+            if (await ShouldUpdate(isManual))
+            {
+                if (isManual)
+                    _systemMessagePrinter.PrintLog("Newer version found. Downloading...", false);
+                await GetUpdate(ReleaseFolderName);
+                await ShouldUpdateOnExit();
+            }
+            else if (isManual)
+                _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
+        }
+
+        public async Task ShouldUpdateOnExit()
+        {
+            if (await IsUpdateReady())
+            {
+                ContextConfig.GetInstance().ShouldUpdateOnExit = true;
+            }
+        }
+
+        /// <summary>
         /// downloads only one file - config.json, to determine is newer version avaible
         /// </summary>
+        /// <param name="isManual">true if updating from /update command, not automatically</param>
         /// <returns></returns>
-        public async Task<bool> ShouldUpdate()
+        public async Task<bool> ShouldUpdate(bool isManual = false)
         {
-            if (!_contextConfig.UpdaterSettings.AutoCheckUpdates)
+            // if it ran automatically then config should be checked
+            if (!_contextConfig.UpdaterSettings.AutoCheckUpdates 
+                && !isManual)
                 return false;
 
             // if its not time yet - skip
             var lastDateUpdate = _contextConfig.UpdaterSettings.LastUpdateDate;
-            if (lastDateUpdate.AddDays(_contextConfig.UpdaterSettings.CheckPeriodDays) > DateTime.Now.Date)
+            if (lastDateUpdate.AddDays(_contextConfig.UpdaterSettings.CheckPeriodDays) > DateTime.Now.Date
+                && !isManual)
                 return false;
 
+            if (isManual)
+                _systemMessagePrinter.PrintLog("Update started", false);
+
             DeleteTempPath();
-            await GetUpdate(ConfigPath, UpdatePath);
+            await GetUpdate(ConfigPath);
 
             Config configOfUpdate = GetConfigFromUpdateFolder();
             // compare it with current
@@ -82,40 +121,77 @@ namespace WeirdWallpaperGenerator.Services
         /// 
         /// </summary>
         /// <returns>true if all needed files was downloaded, integrity is ensured</returns>
-        public bool IsUpdateReady()
+        public async Task<bool> IsUpdateReady()
         {
-            // that files somewhy changes they content so hash changed anyway
-            string[] excludeFileNames = new string[] 
-            { 
-                "WeirdWallpaperGenerator.deps.json", 
-                "WeirdWallpaperGenerator.runtimeconfig.json" 
+            return await IsUpdateReady(0);
+        }
+
+        private async Task<bool> IsUpdateReady(int countOfTry = 0)
+        {
+            // that files somehow changes they hash
+            string[] excludeFileNames = new string[]
+            {
+                "WeirdWallpaperGenerator.deps.json",
+                "WeirdWallpaperGenerator.runtimeconfig.json",
+                "WeirdWallpaperGenerator.runtimeconfig.dev.json"
             };
 
+            List<string> filenamesWithBadIntegrity = new List<string>() { };
+
             HashTable hashtable = (HashTable)_serializationService.Deserialize(HashTableFileUpdatePath);
-            Dictionary<string, string> hashesFromUpdateFolder = HashHelper.GetSHA1ChecksumFromFolder(UpdatePath, new string[] { configFileName, hashTableFileName });
-            foreach(var hashPair in hashesFromUpdateFolder)
+            Dictionary<string, string> hashesFromUpdateFolder =
+                HashHelper.GetSHA1ChecksumFromFolder(
+                    UpdatePath,
+                    new string[] { configFileName, hashTableFileName, pdbFile }
+                    );
+            foreach (var hashPair in hashesFromUpdateFolder)
             {
                 if (excludeFileNames.Contains(hashPair.Value))
                     continue;
 
                 // if some of downloaded file's hashes didn't represent in hashtable (probably means integrity issue)
                 if (!hashtable.Table.ContainsKey(hashPair.Key))
-                    return false;
+                    filenamesWithBadIntegrity.Add(hashPair.Value);
             }
 
+            if (filenamesWithBadIntegrity.Any() )
+            {
+                if (countOfTry < countOfDownloadsRetry)
+                {
+                    List<string> hashesToExclude = hashesFromUpdateFolder.Where(
+                        h => !filenamesWithBadIntegrity.Contains(h.Value)).Select(h => h.Key).ToList();
+                    await GetUpdate(ReleaseFolderName, hashesToExclude);
+                    // try check it one more time. If failed - TODO: exception but not right now, later
+                    if (await IsUpdateReady(++countOfTry) == false)
+                        return false;
+                    else return true;
+                }
+                else
+                {
+                    _contextConfig.UpdateCorrupted = true;
+                    return false;
+                }
+            }
+
+            _contextConfig.UpdateCorrupted = false;
             _contextConfig.VersionFromUpdate = hashtable.Version;
             return true;
         }
 
-        public async Task CheckUpdateBeforeExit()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="isManual">true if updating from /update command, not automatically</param>
+        /// <returns></returns>
+        public async Task CheckUpdateBeforeExit(bool isManual = false)
         {
             // wait for update to download
-            if (_contextConfig.UpdateLoading != null)
+            if (_contextConfig.UpdateLoading.Status != TaskStatus.RanToCompletion)
                 await _contextConfig.UpdateLoading;
 
             if (_contextConfig.ShouldUpdateOnExit)
             {
-                if (_contextConfig.UpdaterSettings.AskBeforeUpdate)
+                if (_contextConfig.UpdaterSettings.AskBeforeUpdate && !isManual)
                 {
                     _systemMessagePrinter.PrintWarning(
                         $"A new version {_contextConfig.VersionFromUpdate} of the programm is ready " +
@@ -133,12 +209,21 @@ namespace WeirdWallpaperGenerator.Services
                         return;
                 }
 
-                // TODO: start cmd process of cutting-pasting-deleting-running procces of updation here
-                _systemMessagePrinter.PrintLog("update started");
+                // if not automatically updation - show message
+                if (_contextConfig.UpdaterSettings.AskBeforeUpdate || isManual)
+                    _systemMessagePrinter.PrintLog("Copying updated files...", false);
                 CopyUpdateToWorkFolder();
-                //context.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
-                // TODO: need to save config.json to update information
                 Environment.Exit(0);
+            }
+            else if (_contextConfig.UpdateCorrupted)
+            {
+                throw ExceptionHelper.GetException(
+                    nameof(UpdateService),
+                    nameof(CheckUpdates),
+                    "Tried to update, some of downloaded files was corrupted. " +
+                    "That probably means bad Internet connection " +
+                    "or an error on the server. Try to fix Internet connection or " +
+                    "download update manualy: "); // TODO: link on github release folder
             }
         }
 
@@ -147,37 +232,52 @@ namespace WeirdWallpaperGenerator.Services
             return (Config)_jsonSerializationService.Deserialize(ConfigFileUpdatePath, typeof(Config));
         }
 
-        public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, string pathToSave, List<string> hashesToExclude = null)
+        public async Task GetUpdate(string pathToUpdateGithubFolderOrFile, List<string> hashesToExclude = null)
         {
             if (hashesToExclude == null)
-                hashesToExclude = GetCurrentVersionFilesGithubSha1Hashes();
+                hashesToExclude = new List<string>();
 
-            Dictionary<string, string> filesToDownload = 
-                await GetFilesToDownload(_mainUrl, pathToUpdateGithubFolderOrFile, hashesToExclude);
-            foreach (var fileToDownload in filesToDownload)
+            hashesToExclude.AddRange(GetCurrentVersionFilesGithubSha1Hashes());
+
+            try
             {
-                await Download(fileToDownload.Key, Path.Combine(pathToSave, fileToDownload.Value.Replace('/', '\\')));
+                Dictionary<string, string> filesToDownload = 
+                await GetFilesToDownload(_mainUrl, pathToUpdateGithubFolderOrFile, hashesToExclude);
+
+                foreach (var fileToDownload in filesToDownload)
+                {
+                    await Download(fileToDownload.Key, Path.Combine(UpdatePath, fileToDownload.Value.Replace('/', '\\')));
+                }
+            }
+            catch (HttpRequestException)
+            {
+                throw ExceptionHelper.GetException(nameof(UpdateService), nameof(GetUpdate),
+                    "Failed attempt to get update. It's probably an Internet connection problem");
             }
         }
 
         public void CopyUpdateToWorkFolder()
         {
             var files = Directory.GetFiles(UpdatePath)
-                .Where(fileName => !(new string[] { 
-                    //"config.json", 
-                    "hashtable"
+                .Where(fileName => !(new string[] {
+                    configFileName, 
+                    hashTableFileName
                 }).Contains(Path.GetFileName(fileName))).ToList();
 
             string commands = string.Join('\n',
                 GenerateDeletionCommand(files, AppDomain.CurrentDomain.BaseDirectory),
                 GenerateCopyCommand(files, AppDomain.CurrentDomain.BaseDirectory),
+                GenerateStartWhatsNewCommand(),
                 GenerateCleanup()
                 );
 
-            using (StreamWriter sw = new StreamWriter(Path.Combine(UpdatePath, "update.bat"), false))
+            using (StreamWriter sw = new StreamWriter(UpdateBatchFilePath, false))
             {
                 sw.Write(GenerateFinalCommand(commands));
             }
+
+            UpdateConfig();
+
             ProcessStartInfo startInfo = new ProcessStartInfo(Path.Combine(UpdatePath, "update.bat"))
             {
                 UseShellExecute = true,
@@ -185,8 +285,16 @@ namespace WeirdWallpaperGenerator.Services
             };
             Process.Start(startInfo);
 
-            //process.WaitForExit();
             Environment.Exit(0);
+        }
+
+        private void UpdateConfig()
+        {
+            Config configOfUpdate = GetConfigFromUpdateFolder();
+            _contextConfig.UpdaterSettings.LastUpdateDate = DateTime.Now.Date;
+            _contextConfig.About.Version = configOfUpdate.About.Version;
+            _contextConfig.About.ReleaseDate = configOfUpdate.About.ReleaseDate;
+            ContextConfig.Save();
         }
 
         private string GetDeleteCommand()
@@ -229,6 +337,11 @@ namespace WeirdWallpaperGenerator.Services
         private string GenerateCleanup()
         {
             return $"rmdir /s /q \"{UpdatePath}\"";
+        }
+
+        private string GenerateStartWhatsNewCommand()
+        {
+            return $"\"{WhatsNewFilePath}\"";
         }
         
         private string GenerateFinalCommand(string commands)
@@ -310,7 +423,7 @@ namespace WeirdWallpaperGenerator.Services
 
         public List<string> GetCurrentVersionFilesGithubSha1Hashes()
         {
-            var path = Environment.CurrentDirectory;
+            var path = AppDomain.CurrentDomain.BaseDirectory;
             List<string> hashes = new List<string>();
 
             string[] filesPaths = Directory.GetFiles(path);
@@ -322,7 +435,7 @@ namespace WeirdWallpaperGenerator.Services
             return hashes;
         }
 
-        /// <returns>-1 if version 1 is higher. 1 if version 2 is higher. 0 if equals </returns>
+        /// <returns>-1 if version1 is higher. 1 if version2 is higher. 0 if equals </returns>
         private int VersionComparer(string version1, string version2)
         {
             if (string.IsNullOrEmpty(version1))

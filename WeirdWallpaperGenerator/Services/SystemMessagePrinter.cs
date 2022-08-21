@@ -24,10 +24,10 @@ namespace WeirdWallpaperGenerator.Services
             string warningTitle = "",
             string successTitle = "",
             string logTitle = "",
-            ConsoleColorNullable errorColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable warningColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable successColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable logColor = ConsoleColorNullable.Default
+            ConsoleColorNullable errorColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable warningColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable successColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable logColor = ConsoleColorNullable.Null
             ) 
         {
             _errorTitle = errorTitle;
@@ -46,10 +46,10 @@ namespace WeirdWallpaperGenerator.Services
             string warningTitle = "",
             string successTitle = "",
             string logTitle = "",
-            ConsoleColorNullable errorColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable warningColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable successColor = ConsoleColorNullable.Default,
-            ConsoleColorNullable logColor = ConsoleColorNullable.Default
+            ConsoleColorNullable errorColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable warningColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable successColor = ConsoleColorNullable.Null,
+            ConsoleColorNullable logColor = ConsoleColorNullable.Null
             )
         {
             if (instance == null)
@@ -77,7 +77,7 @@ namespace WeirdWallpaperGenerator.Services
         internal void PrintError(string message, bool putPrefix = true)
         {
             message = $"{(!string.IsNullOrWhiteSpace(_errorTitle) && putPrefix ? $"{_errorTitle}: " : "")}{message}";
-            ConsoleColor color = _errorColor == ConsoleColorNullable.Default 
+            ConsoleColor color = _errorColor == ConsoleColorNullable.Null 
                 ? Console.ForegroundColor 
                 : (ConsoleColor)_errorColor;
 
@@ -87,7 +87,7 @@ namespace WeirdWallpaperGenerator.Services
         internal void PrintWarning(string message, bool putPrefix = true)
         {
             message = $"{(!string.IsNullOrWhiteSpace(_warningTitle) && putPrefix ? $"{_warningTitle}: " : "")}{message}";
-            ConsoleColor color = _warningColor == ConsoleColorNullable.Default
+            ConsoleColor color = _warningColor == ConsoleColorNullable.Null
                 ? Console.ForegroundColor
                 : (ConsoleColor)_warningColor;
 
@@ -97,7 +97,7 @@ namespace WeirdWallpaperGenerator.Services
         internal void PrintSuccess(string message, bool putPrefix = true)
         {
             message = $"{(!string.IsNullOrWhiteSpace(_successTitle) && putPrefix ? $"{_successTitle}: " : "")}{message}";
-            ConsoleColor color = _successColor == ConsoleColorNullable.Default
+            ConsoleColor color = _successColor == ConsoleColorNullable.Null
                 ? Console.ForegroundColor
                 : (ConsoleColor)_successColor;
 
@@ -107,7 +107,7 @@ namespace WeirdWallpaperGenerator.Services
         internal void PrintLog(string message, bool putPrefix = true)
         {
             message = $"{(!string.IsNullOrWhiteSpace(_logTitle) && putPrefix ? $"{_logTitle}: " : "")}{message}";
-            ConsoleColor color = _logColor == ConsoleColorNullable.Default
+            ConsoleColor color = _logColor == ConsoleColorNullable.Null
                 ? Console.ForegroundColor
                 : (ConsoleColor)_logColor;
 

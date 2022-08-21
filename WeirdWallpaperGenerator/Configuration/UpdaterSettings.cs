@@ -9,7 +9,7 @@ namespace WeirdWallpaperGenerator.Configuration
 
         public bool AskBeforeUpdate { get; set; } = true;
 
-        public int CheckPeriodDays { get; set; } = 14;
+        public int CheckPeriodDays { get; set; } = 9;
 
         public DateTime LastUpdateDate { get; set; } = DateTime.Now;
     }

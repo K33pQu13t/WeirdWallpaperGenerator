@@ -45,27 +45,6 @@ namespace WeirdWallpaperGenerator.Helpers
 			}
 		}
 
-		//public static string GetSHA1ChecksumFromFolder(string folderPath, string[] excludeFiles = null)
-  //      {
-		//	string[] paths = Directory.GetFiles(folderPath);
-		//	if (excludeFiles != null)
-  //          {
-		//		paths = paths.Where(x => !excludeFiles.Contains(Path.GetFileName(x))).ToArray();
-		//	}
-
-		//	string result = string.Empty;
-		//	foreach(var path in paths)
-  //          {
-		//		result += GetSHA1Checksum(path);
-  //          }
-
-		//	using (var sha1 = SHA1.Create())
-  //          {
-		//		var hash = sha1.ComputeHash(Encoding.ASCII.GetBytes(result));
-		//		return BitConverter.ToString(hash).Replace("-", "").ToLower();
-		//	}
-		//}
-
 		public static Dictionary<string, string> GetSHA1ChecksumFromFolder(string folderPath, string[] excludeFiles = null)
         {
 			Dictionary<string, string> checksums = new Dictionary<string, string>();

@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Services;
@@ -24,9 +25,10 @@ namespace WeirdWallpaperGenerator.Controllers
         private readonly uint SPIF_UPDATEINIFILE = 0x01;
         private readonly uint SPIF_SENDWININICHANGE = 0x02;
 
-        private PrimeFractalConfigurer _primeFractalConfigurer = new PrimeFractalConfigurer();
-        private SystemMessagePrinter _printer = SystemMessagePrinter.GetInstance();
-        private ReleasePreparingService _releasePreparingService = new ReleasePreparingService();
+        private readonly PrimeFractalConfigurer _primeFractalConfigurer = new PrimeFractalConfigurer();
+        private readonly SystemMessagePrinter _printer = SystemMessagePrinter.GetInstance();
+        private readonly ReleasePreparingService _releasePreparingService = new ReleasePreparingService();
+        private readonly UpdateService _updateService = new UpdateService();
 
         [Description("shows info about assembly")]
         private readonly string about = "about";
@@ -34,6 +36,8 @@ namespace WeirdWallpaperGenerator.Controllers
         private readonly string[] commandGenerate = new string[] { "g", "gen", "generate" };
         [Description("generates an image, saves it and sets it as background image. Usage: /sw [flags]")]
         private readonly string[] commandSetWallpaper = new string[] { "sw", "setwp" };
+        [Description("checks if there is an update, and downloads it. Usage: /u")]
+        private readonly string[] commandUpdate = new string[] { "update", "upd", "u" };
         [Description(
             "shows the help about generic commands.\n" +
             "Specify a command or flag to get the exactly help. Usage: {command or flag} ? or ? {command or flag}\n" +
@@ -51,73 +55,78 @@ namespace WeirdWallpaperGenerator.Controllers
 
 
 
-        public void ExecuteCommand(string[] commandLineArray)
+        public async Task ExecuteCommand(string[] commandLineArray)
         {
-            try
+            if (commandLineArray.Length == 0)
             {
-                if (commandLineArray.Length == 0)
-                {
-                    Console.WriteLine($"no command specified. Type {commandHelp.First()} to get help");
-                    return;
-                }
-                string commandLine = string.Join(" ", commandLineArray);
-                List<string> commandList = commandLine.ToLower().SplitToArguments().ToList();
+                Console.WriteLine($"no command specified. Type {commandHelp.First()} to get help");
+                return;
+            }
+            string commandLine = string.Join(" ", commandLineArray);
+            List<string> commandList = commandLine.ToLower().SplitToArguments().ToList();
 
-                string methodValue = commandList.GetFlagValue(flagMethod); // TODO: check for -method
+            string methodValue = commandList.GetFlagValue(flagMethod); // TODO: check for -method
 
-                if (commandLine == about)
-                {
-                    Console.WriteLine($"\n{GetAbout()}");
-                }
-                else if (commandList.Any(c => commandHelp.Contains(c)))
-                {
-                    var value = commandList.GetHelpValue(commandHelp);
-                    Console.WriteLine(GetHelp(commandList, value));
-                }
-                else if (commandList.IsCommand(commandSetWallpaper))
-                {
-                    if (commandList.ContainsFlag(flagMethod))
-                    {
-                        // for PrimeFractalDrawer
-                        if (commandList.ContainsFlag(flagMethod))
-                        {
-                            PrimeFractalDrawer drawer = _primeFractalConfigurer.Configure(commandList);
-
-                            string pathToWallpaper = GenerateWallpaper(drawer, commandList.ContainsFlag(flagShow));
-                            SetWallpaper(pathToWallpaper);
-                        }
-                        // TODO: else if there for another IDrawers
-                    }
-                    else
-                    {
-                        // TODO: random method
-                    }
-                }
-                else if (commandList.IsCommand(commandGenerate))
+            if (commandLine == about)
+            {
+                Console.WriteLine($"\n{GetAbout()}");
+            }
+            else if (commandList.Any(c => commandHelp.Contains(c)))
+            {
+                var value = commandList.GetHelpValue(commandHelp);
+                Console.WriteLine(GetHelp(commandList, value));
+            }
+            else if (commandList.IsCommand(commandSetWallpaper))
+            {
+                if (commandList.ContainsFlag(flagMethod))
                 {
                     // for PrimeFractalDrawer
-                    if (methodValue.IsFlag(_primeFractalConfigurer.method))
+                    if (commandList.ContainsFlag(flagMethod))
                     {
                         PrimeFractalDrawer drawer = _primeFractalConfigurer.Configure(commandList);
-                        GenerateWallpaper(drawer, commandList.ContainsFlag(flagShow));
-                    }
-                    // TODO: else if code there for another methods
-                }
-                // TODO: else if another possible commands
-                #if DEBUG
-                // prepare build folder for release
-                else if (commandList.IsCommand("pb"))
-                {
-                    _releasePreparingService.Prepare(ReleasePreparingService.VersionStack.Patch);
-                }
-                #endif
-            }
-            catch (Exception ex)
-            {
-                _printer.PrintError(ex.Message);
-            }
-        }
 
+                        string pathToWallpaper = GenerateWallpaper(drawer, commandList.ContainsFlag(flagShow));
+                        SetWallpaper(pathToWallpaper);
+                    }
+                    // TODO: else if there for another IDrawers
+                }
+                else
+                {
+                    // TODO: random method
+                }
+            }
+            else if (commandList.IsCommand(commandGenerate))
+            {
+                // for PrimeFractalDrawer
+                if (methodValue.IsFlag(_primeFractalConfigurer.method))
+                {
+                    PrimeFractalDrawer drawer = _primeFractalConfigurer.Configure(commandList);
+                    GenerateWallpaper(drawer, commandList.ContainsFlag(flagShow));
+                }
+                // TODO: else if code there for another methods
+            }
+            else if (commandList.IsCommand(commandUpdate))
+            {
+                var context = ContextConfig.GetInstance();
+                // if update didn't start automatically
+                if (context.UpdaterSettings.AutoCheckUpdates == false)
+                {
+                    await _updateService.CheckUpdates(isManual: true);
+                    await _updateService.CheckUpdateBeforeExit(isManual: true);
+                    context.ShouldUpdateOnExit = false;
+                }
+            }
+            // TODO: else if another possible commands
+
+            #if DEBUG
+            // prepare build folder for release
+            else if (commandList.IsCommand("pb"))
+            {
+                // TODO: set increment stack from flag
+                _releasePreparingService.Prepare(ReleasePreparingService.VersionStack.Patch);
+            }
+            #endif
+        }
 
         /// <summary>
         /// generates and saves wallpaper
@@ -165,6 +174,7 @@ namespace WeirdWallpaperGenerator.Controllers
                         $"Generic commands:\n" +
                         $"{string.Join(", ", commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandGenerate))}\n" +
                         $"{string.Join(", ", commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandSetWallpaper))}\n" +
+                        $"{string.Join(", ", commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandUpdate))}\n" +
                         $"\nGeneric flags:\n" +
                         $"{string.Join(", ", flagShow.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagShow))}\n" +
                         $"{string.Join(", ", flagMethod.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagMethod))}\n" +
@@ -177,6 +187,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 {
                     return $"{about}: {DescriptionHelper.GetDescription<MainController>(nameof(about))}";
                 }
+
                 else if (commandGenerate.Contains(helpFor[1..])) 
                 {
                     return $"{string.Join(", ", commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandGenerate))}";
@@ -185,6 +196,15 @@ namespace WeirdWallpaperGenerator.Controllers
                 {
                     return $"{string.Join(", ", commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandSetWallpaper))}";
                 }
+                else if (commandUpdate.Contains(helpFor[1..]))
+                {
+                    return $"{string.Join(", ", commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandUpdate))}";
+                }
+                else if (commandHelp.Contains(helpFor))
+                {
+                    return $"{helpFor}: {DescriptionHelper.GetDescription<MainController>(nameof(commandHelp))}";
+                }
+
                 else if (flagShow.Contains(helpFor[1..]))
                 {
                     return $"{string.Join(", ", flagShow.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagShow))}";
@@ -193,10 +213,6 @@ namespace WeirdWallpaperGenerator.Controllers
                 {
                     return $"{helpFor}: {DescriptionHelper.GetDescription<MainController>(nameof(flagMethod))}\n" +
                            $"\n{GetListOfMethods()}";
-                }
-                else if (commandHelp.Contains(helpFor))
-                {
-                    return $"{helpFor}: {DescriptionHelper.GetDescription<MainController>(nameof(commandHelp))}";
                 }
                 else if (commandList.ContainsFlag(flagMethod))
                 {

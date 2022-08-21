@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Controllers;
-using WeirdWallpaperGenerator.Helpers;
 using WeirdWallpaperGenerator.Services;
 
 namespace WeirdWallpaperGenerator
@@ -21,16 +18,22 @@ namespace WeirdWallpaperGenerator
 
             MainController controller = new MainController();
 
-            SystemMessagePrinter.GetInstance().PrintLog($"version {context.About.Version}");
+            SystemMessagePrinter.GetInstance().PrintLog($"Version: {context.About.Version}");
 
-            // do not need to wait for it now, let it be on a background
-            context.UpdateLoading = startup.CheckUpdates();
+            try
+            {
+                // do not need to wait for it now, let it be on a background
+                //context.UpdateLoading = _updater.CheckUpdates();
 
-            //controller.ExecuteCommand(args);
-            //controller.ExecuteCommand(new string[] { "/g -m p -s" });
-            //controller.ExecuteCommand(new string[] { "/pb" });
+                //await controller.ExecuteCommand(args);
+                await controller.ExecuteCommand(new string[] { "/pb" });
 
-            await _updater.CheckUpdateBeforeExit();
+                //await _updater.CheckUpdateBeforeExit();
+            }
+            catch (Exception ex)
+            {
+                SystemMessagePrinter.GetInstance().PrintError(ex.Message);
+            }
         }
     }
 }
