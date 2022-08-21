@@ -1,9 +1,0 @@
---===--===--===--===--===--===--===--===--===--===--===--===--
-
-
-Version 1.1.0
-Release date: 20.08.2022
-
- * Added autoupdate
- 
- * Refactoring and small improvements

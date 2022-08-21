@@ -43,7 +43,8 @@ namespace WeirdWallpaperGenerator.Services
         internal void Prepare(VersionStack versionUpdate)
         {
             RemoveGarbage();
-            //CopyColors();
+            RemoveDuplicatedColors();
+            //CopyColors(); // TODO: somewhy there is a problem with access
             CopyConfigWithIncrementVersion(versionUpdate);
             SetReleaseDate();
             GenerateHashTable();
@@ -65,7 +66,6 @@ namespace WeirdWallpaperGenerator.Services
 
         internal void CopyColors()
         {
-            RemoveDuplicatedColors();
             Directory.CreateDirectory(ColorsFolderBuildPath);
             var colorsPaths = Directory.GetFiles(ColorsFolderDevPath);
             foreach (var path in colorsPaths)

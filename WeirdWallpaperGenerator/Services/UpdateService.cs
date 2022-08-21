@@ -20,7 +20,7 @@ namespace WeirdWallpaperGenerator.Services
     {
         HttpClient _client;
         private const string contentsUrlTemplate = "https://api.github.com/repos/{0}/contents";
-        private const string branch = "?ref=feature/add_auto_updater"; //"?ref=master";
+        private const string branch = "?ref=master";
         private const string _repo = "K33pQu13t/WeirdWallpaperGenerator";
 
         private const string configFileName = "config.json";
@@ -68,7 +68,9 @@ namespace WeirdWallpaperGenerator.Services
         /// <returns></returns>
         public async Task CheckUpdates(bool isManual = false)
         {
+#if DEBUG
             _systemMessagePrinter.PrintLog("CheckUpdates");
+#endif
             if (await ShouldUpdate(isManual))
             {
                 if (isManual)
@@ -133,7 +135,8 @@ namespace WeirdWallpaperGenerator.Services
             {
                 "WeirdWallpaperGenerator.deps.json",
                 "WeirdWallpaperGenerator.runtimeconfig.json",
-                "WeirdWallpaperGenerator.runtimeconfig.dev.json"
+                "WeirdWallpaperGenerator.runtimeconfig.dev.json",
+                "what's new.txt"
             };
 
             List<string> filenamesWithBadIntegrity = new List<string>() { };
@@ -161,13 +164,13 @@ namespace WeirdWallpaperGenerator.Services
                     List<string> hashesToExclude = hashesFromUpdateFolder.Where(
                         h => !filenamesWithBadIntegrity.Contains(h.Value)).Select(h => h.Key).ToList();
                     await GetUpdate(ReleaseFolderName, hashesToExclude);
-                    // try check it one more time. If failed - TODO: exception but not right now, later
                     if (await IsUpdateReady(++countOfTry) == false)
                         return false;
                     else return true;
                 }
                 else
                 {
+                    // setting the flag what there was integrity issue
                     _contextConfig.UpdateCorrupted = true;
                     return false;
                 }
@@ -223,7 +226,7 @@ namespace WeirdWallpaperGenerator.Services
                     "Tried to update, some of downloaded files was corrupted. " +
                     "That probably means bad Internet connection " +
                     "or an error on the server. Try to fix Internet connection or " +
-                    "download update manualy: "); // TODO: link on github release folder
+                    "download update manualy: \"https://github.com/K33pQu13t/WeirdWallpaperGenerator/Release build\"");
             }
         }
 
