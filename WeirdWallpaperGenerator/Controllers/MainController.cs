@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -97,6 +98,13 @@ namespace WeirdWallpaperGenerator.Controllers
             }
             else if (commandGenerate.Contains(command.Value))
             {
+                // for random method
+                if (methodFlag == null)
+                {
+                    // TODO: make it real random
+                    methodFlag = new Flag { Value = "m", Arguments = new List<Argument>() { new Argument { Value = "mb" } } };
+                }
+
                 // for MathBilliardsDrawer
                 if (methodFlag.IsValue(_mathBilliardConfigurer.methods))
                 {
@@ -155,6 +163,7 @@ namespace WeirdWallpaperGenerator.Controllers
             string title = $"{currentTime:MM.dd HH-mm-ss} {drawer.GetArguments()}.png";
             string folderPath = Path.GetFullPath(
                 ContextConfig.GetInstance().EnvironmentSettings.SaveFolderPath);
+            Directory.CreateDirectory(folderPath);
             string path = Path.GetFullPath(Path.Combine(folderPath, title));
             
             background.Save(path);
