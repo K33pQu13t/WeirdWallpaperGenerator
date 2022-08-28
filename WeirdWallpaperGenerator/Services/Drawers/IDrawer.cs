@@ -13,6 +13,6 @@ namespace WeirdWallpaperGenerator.Services.Drawers
 
         /// <returns>a string with arguments which can be used in constructor of instance
         /// to redraw same bitmap as got</returns>
-        public string GetConfig();
+        public string GetArguments();
     }
 }
