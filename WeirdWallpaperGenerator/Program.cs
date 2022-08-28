@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Controllers;
 using WeirdWallpaperGenerator.Services;
