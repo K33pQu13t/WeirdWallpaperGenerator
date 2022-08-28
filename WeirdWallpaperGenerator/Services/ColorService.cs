@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using WeirdWallpaperGenerator.Configuration;
 using WeirdWallpaperGenerator.Helpers;
 
 namespace WeirdWallpaperGenerator.Services
@@ -17,7 +19,8 @@ namespace WeirdWallpaperGenerator.Services
 
         public Color[] GetColorsFromFile(string path)
         {
-            string[] hexColors = File.ReadAllLines(path);
+            path = Path.GetFullPath(path);
+            string[] hexColors = File.ReadAllLines(path).Select(c => c.ToLower()).ToArray();
 
             // make sure only unique colors represented
             if (hexColors.Distinct().Count() != hexColors.Length)
@@ -41,6 +44,15 @@ namespace WeirdWallpaperGenerator.Services
         public Color GetRandomColor(Color[] hexColors)
         {
             return hexColors[_rnd.Next(0, hexColors.Length)];
+        }
+
+        public Color GetRandomColorFromSets(List<ColorSet> sets, out ColorSet choosenSet)
+        {
+            choosenSet = sets[_rnd.Next(0, sets.Count)];
+
+            var colorsFromSet = GetColorsFromFile(choosenSet.Path);
+
+            return GetRandomColor(colorsFromSet);
         }
     }
 }

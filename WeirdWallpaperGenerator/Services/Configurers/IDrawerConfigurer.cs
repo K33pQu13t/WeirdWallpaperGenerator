@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using WeirdWallpaperGenerator.Models.CommandLineParts;
 using WeirdWallpaperGenerator.Services.Drawers;
 
 namespace WeirdWallpaperGenerator.Services.Configurers
@@ -8,9 +8,9 @@ namespace WeirdWallpaperGenerator.Services.Configurers
         /// <summary>
         /// configures instance of IDrawer according to specified commands
         /// </summary>
-        /// <param name="commands">commands for configuring</param>
+        /// <param name="command"><see cref="Command"/> instance contained flags for configuring</param>
         /// <returns></returns>
-        T Configure(List<string> commandsList);
+        T Configure(Command command);
 
         /// <summary>
         /// returns a help string about this method

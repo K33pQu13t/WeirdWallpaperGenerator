@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -69,10 +68,13 @@ namespace WeirdWallpaperGenerator.Services
         public async Task CheckUpdates(bool isManual = false)
         {
 #if DEBUG
-            _systemMessagePrinter.PrintLog("CheckUpdates");
+            _systemMessagePrinter.PrintLog("Check updates");
 #endif
             if (await ShouldUpdate(isManual))
             {
+#if DEBUG
+                _systemMessagePrinter.PrintLog("Downloading updates");
+#endif
                 if (isManual)
                     _systemMessagePrinter.PrintLog("Newer version found. Downloading...", false);
                 await GetUpdate(ReleaseFolderName);

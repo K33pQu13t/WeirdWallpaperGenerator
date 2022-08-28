@@ -10,14 +10,17 @@ namespace WeirdWallpaperGenerator.Helpers
         {
             try
             {
-                FieldInfo fieldInfo = typeof(T).GetField(fieldName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                FieldInfo fieldInfo = typeof(T).GetField(
+                    fieldName, 
+                    BindingFlags.Instance | 
+                    BindingFlags.Public | 
+                    BindingFlags.NonPublic | 
+                    BindingFlags.Static);
                 object[] descriptionAttrs;
-                // for field
                 if (fieldInfo == null)
                 {
                     descriptionAttrs = typeof(T).GetCustomAttributes(typeof(DescriptionAttribute), false);
                 }
-                // for class
                 else
                 {
                     descriptionAttrs = fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);

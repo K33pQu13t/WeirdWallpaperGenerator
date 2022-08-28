@@ -3,7 +3,7 @@ using WeirdWallpaperGenerator.Enums.Drawers;
 
 namespace WeirdWallpaperGenerator.DTO
 {
-    public class PrimeFractalConfigDTO : DrawerConfigDto
+    public class MathBilliardsConfigDTO : DrawerConfigDto
     {
         public Color FillInsideColor { get; set; }
         public Color FillOutsideColor { get; set; }

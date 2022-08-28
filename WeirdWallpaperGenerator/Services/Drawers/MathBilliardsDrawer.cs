@@ -6,7 +6,7 @@ using WeirdWallpaperGenerator.Helpers;
 
 namespace WeirdWallpaperGenerator.Services.Drawers
 {
-    public class PrimeFractalDrawer : IDrawer
+    public class MathBilliardsDrawer : IDrawer
     {
         private Bitmap _bitmap;
         /// <summary>
@@ -87,7 +87,7 @@ namespace WeirdWallpaperGenerator.Services.Drawers
         private Color _fillInsideColor;
         private Color _fillOutsideColor;
 
-        public PrimeFractalDrawer(PrimeFractalConfigDTO config)
+        public MathBilliardsDrawer(MathBilliardsConfigDTO config)
         {
             _height = config.Height.Value;
             _width = config.Width.Value;
@@ -95,12 +95,12 @@ namespace WeirdWallpaperGenerator.Services.Drawers
 
             if (_width % _brushSize != 0)
                 throw ExceptionHelper.GetException(
-                    nameof(PrimeFractalDrawer),
+                    nameof(MathBilliardsDrawer),
                     "Constructor",
                     "width must can be divided by brush size without remainder");
             if (_brushSize > _width || _brushSize > _height)
                 throw ExceptionHelper.GetException(
-                    nameof(PrimeFractalDrawer),
+                    nameof(MathBilliardsDrawer),
                     "Constructor", 
                     "brush size can't be bigger than picture area");
 
@@ -110,9 +110,9 @@ namespace WeirdWallpaperGenerator.Services.Drawers
             SetPattern();
         }
 
-        public string GetConfig()
+        public string GetArguments()
         {
-            return $"{GetType().Name} {_height}, {_width}, {_fillOutsideColor.ToHex()}, {_fillInsideColor.ToHex()}, {_brushSize}, {_startPosition}";
+            return $"-m mb -h {_height} -w {_width} -c \'{_fillOutsideColor.ToHex()}, {_fillInsideColor.ToHex()}\' -b {_brushSize} -sp {_startPosition}";
         }
 
         /// <summary>
@@ -135,7 +135,7 @@ namespace WeirdWallpaperGenerator.Services.Drawers
                     size = _width.GCD(newHeight--);
                     if (newHeight <= 0)
                         throw ExceptionHelper.GetException(
-                            nameof(PrimeFractalDrawer),
+                            nameof(MathBilliardsDrawer),
                             nameof(SetPattern), 
                             "unable to fit such width, height and brush size");
                 }
