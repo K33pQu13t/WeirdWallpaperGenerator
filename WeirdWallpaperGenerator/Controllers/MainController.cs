@@ -77,23 +77,28 @@ namespace WeirdWallpaperGenerator.Controllers
             }
             else if (commandSetWallpaper.Contains(command.Value))
             {
-                if (command.ContainsFlag(flagMethod))
+                // for random method
+                if (methodFlag == null)
                 {
-                    // for MathBilliardsDrawer
-                    if (methodFlag.IsValue(_mathBilliardConfigurer.methods))
-                    {
-                        MathBilliardsDrawer drawer = _mathBilliardConfigurer.Configure(command);
-                        string pathToWallpaper = GenerateWallpaper(
-                            drawer, 
-                            command.ContainsFlag(flagShow),
-                            command.ContainsFlag(flagOpen));
-                        SetWallpaper(pathToWallpaper);
-                    }
-                    // TODO: else if there for another IDrawers
+                    // TODO: make it real random
+                    methodFlag = new Flag { Value = "m", Arguments = new List<Argument>() { new Argument { Value = "mb" } } };
                 }
+
+                // for MathBilliardsDrawer
+                if (methodFlag.IsValue(_mathBilliardConfigurer.methods))
+                {
+                    MathBilliardsDrawer drawer = _mathBilliardConfigurer.Configure(command);
+                    string pathToWallpaper = GenerateWallpaper(
+                        drawer, 
+                        command.ContainsFlag(flagShow),
+                        command.ContainsFlag(flagOpen));
+                    SetWallpaper(pathToWallpaper);
+                }
+                // TODO: else if code there for another methods
                 else
                 {
-                    // TODO: random method
+                    throw ExceptionHelper.GetException(nameof(MainController), nameof(ExecuteCommand),
+                        $"Unknown method \"{methodFlag.SingleArgumentValue}\" specified. Type -m ? to find out about available methods");
                 }
             }
             else if (commandGenerate.Contains(command.Value))
@@ -114,12 +119,12 @@ namespace WeirdWallpaperGenerator.Controllers
                         command.ContainsFlag(flagShow),
                         command.ContainsFlag(flagOpen));
                 }
+                // TODO: else if code there for another methods
                 else
                 {
                     throw ExceptionHelper.GetException(nameof(MainController), nameof(ExecuteCommand),
                         $"Unknown method \"{methodFlag.SingleArgumentValue}\" specified. Type -m ? to find out about available methods");
                 }
-                // TODO: else if code there for another methods
             }
             else if (commandUpdate.Contains(command.Value))
             {
