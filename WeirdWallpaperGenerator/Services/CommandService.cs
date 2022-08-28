@@ -90,8 +90,8 @@ namespace WeirdWallpaperGenerator.Helpers
                         continue;
 
                     if (string.IsNullOrEmpty(flag.Value))
-                        throw ExceptionHelper.GetException(nameof(Helpers.CommandService), nameof(SplitToArguments),
-                            "Bad request"); // TODO: ошибку получше придумай
+                        throw ExceptionHelper.GetException(nameof(CommandService), nameof(SplitToArguments),
+                            "Bad command sequence. Type help for help"); 
                     flag.Arguments.Add(new Argument() { Value = part, Flag = flag });
 
                     AddFlag(command, flag);
