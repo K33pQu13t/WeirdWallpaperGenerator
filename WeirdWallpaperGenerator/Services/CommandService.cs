@@ -27,7 +27,7 @@ namespace WeirdWallpaperGenerator.Helpers
 
             if (!LineContainsCommand(commandLine, out string commandValue))
             {
-                if (!BasicCommandList.commandHelp.Contains(commands.First()))
+                if (!commands.Any(x => BasicCommandList.commandHelp.Contains(x)))
                 {
                     throw ExceptionHelper.GetException(
                    nameof(Helpers.CommandService),
