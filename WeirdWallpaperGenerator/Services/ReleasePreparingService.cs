@@ -131,6 +131,7 @@ namespace WeirdWallpaperGenerator.Services
         {
             var config = GetConfigFromBuildFolder();
             config.About.ReleaseDate = DateTime.Now;
+            config.UpdaterSettings.LastUpdateCheckDate = DateTime.Now;
             ContextConfig.Save(config, ConfigFileBuildPath);
 
             _printer.PrintLog("Release date setted");

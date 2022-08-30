@@ -1,7 +1,7 @@
 {
   "About": {
-    "Version": "1.0.1",
-    "ReleaseDate": "29.08.2022"
+    "Version": "1.0.2",
+    "ReleaseDate": "31.08.2022"
   },
   "EnvironmentSettings": {
     "SaveFolderPath": "backgrounds"
@@ -10,7 +10,7 @@
     "AutoCheckUpdates": true,
     "AskBeforeUpdate": false,
     "CheckPeriodDays": 9,
-    "LastUpdateCheckDate": "29.08.2022"
+    "LastUpdateCheckDate": "31.08.2022"
   },
   "ColorsSets": {
     "Sets": [
