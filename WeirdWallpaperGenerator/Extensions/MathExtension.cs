@@ -30,7 +30,7 @@ namespace WeirdWallpaperGenerator.Helpers
                 throw ExceptionHelper.GetException(
                     nameof(MathExtension),
                     nameof(GetAllDivisors),
-                    "minimal divisor can't be less than zero");
+                    "Minimal divisor can't be less than zero");
 
             int divisor = minDivisor;
             ICollection<int> divisors = new List<int>();

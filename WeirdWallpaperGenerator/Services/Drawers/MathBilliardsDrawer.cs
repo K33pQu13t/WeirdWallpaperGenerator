@@ -97,12 +97,12 @@ namespace WeirdWallpaperGenerator.Services.Drawers
                 throw ExceptionHelper.GetException(
                     nameof(MathBilliardsDrawer),
                     "Constructor",
-                    "width must can be divided by brush size without remainder");
+                    $"Width must can be divided by brush size without remainder. Specified width: {_width}");
             if (_brushSize > _width || _brushSize > _height)
                 throw ExceptionHelper.GetException(
                     nameof(MathBilliardsDrawer),
                     "Constructor", 
-                    "brush size can't be bigger than picture area");
+                    $"Brush size can't be bigger than picture area. Picture size is {_width}x{_height}");
 
             _fillInsideColor = config.FillInsideColor;
             _fillOutsideColor = config.FillOutsideColor;
@@ -137,7 +137,7 @@ namespace WeirdWallpaperGenerator.Services.Drawers
                         throw ExceptionHelper.GetException(
                             nameof(MathBilliardsDrawer),
                             nameof(SetPattern), 
-                            "unable to fit such width, height and brush size");
+                            "Unable to fit such width, height and brush size. Try another brush size or resolution");
                 }
                 while (size != _brushSize);
 

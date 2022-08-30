@@ -57,7 +57,7 @@ namespace WeirdWallpaperGenerator.Services.Configurers
             "You can specify two colors, so they be as they are:\n" +
             "  -c #29ab87 #282c35 - both colors will be exactrly as specified\n\n" +
             "You can specify several colors as one argument for random picking them. For one argument, " +
-            "both colors whould be picked from specifyed list:\n" +
+            "both colors whould be picked from specified list:\n" +
             "  -c \"#4b0082, #ff6700, #645452, #c8aca9\" - both colors would be some from that list.\n\n" +
             "If you want second color would be set different from first color list, you can use this flag " +
             "as example above, but put two arguments:\n" +
@@ -202,7 +202,7 @@ namespace WeirdWallpaperGenerator.Services.Configurers
                 throw ExceptionHelper.GetException(
                      nameof(MathBilliardsConfigurer),
                      nameof(Configure),
-                     $"error trying to get collors from file. " +
+                     $"Error trying to get collors from file. " +
                      $"\"{ex.FileName}\" file was not found. Check config.json and make sure colors paths exists");
             }
 
@@ -259,7 +259,7 @@ namespace WeirdWallpaperGenerator.Services.Configurers
                            nameof(MathBilliardsConfigurer).ToString(),
                            nameof(Configure).ToString(),
                            $"Can't find such set like \"{value}\" in config.json. " +
-                           $"Probably there is a type mistake, or you forgot to set this color set in config.json. " +
+                           $"Probably there is a spelling mistake, or you forgot to set this color set in config.json. " +
                            $"If you meant an exactly color, then notice what colors must be specified as hex, " +
                            $"like: #1b1b1b or #77c3c3c3 (with alpha-channel)");
                     }
@@ -321,40 +321,49 @@ namespace WeirdWallpaperGenerator.Services.Configurers
         public string GetHelp(Command command = null)
         {
             string helpFor = command?.GetFlagValues(BasicCommandList.commandHelp).Last();
-            string prefix = $"-m {methods.First()}";
-
             if (string.IsNullOrWhiteSpace(helpFor))
             {
-                return $"{string.Join(", ", heightFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(heightFlag))}\n" +
-                $"{string.Join(", ", widthFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(widthFlag))}\n" +
-                $"{string.Join(", ", brushFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(brushFlag))}\n" +
-                $"{string.Join(", ", colorsFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(colorsFlag))}\n" +
-                $"{string.Join(", ", setCornerFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(setCornerFlag))}\n";
+                return $"{string.Join(", ", heightFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(heightFlag))}\n\n" +
+                $"{string.Join(", ", widthFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(widthFlag))}\n\n" +
+                $"{string.Join(", ", brushFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(brushFlag))}\n\n" +
+                $"{string.Join(", ", colorsFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(colorsFlag))}\n\n" +
+                $"{string.Join(", ", setCornerFlag.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(setCornerFlag))}";
             }
-            else if (methods.Contains(helpFor))
+
+            string prefix = 
+                $"-{command.Flags.Find(x => BasicCommandList.flagMethod.Any(v => v == x.Value)).Value} " +
+                $"{command.GetFlagValue(BasicCommandList.flagMethod)}";
+            string[] line = helpFor.Split(' ').Select(x => x.Replace("\"", "")).ToArray();
+
+            string flagForHelp = line.First();
+            if (line.Length > 1)
+                flagForHelp = line[^2]; // pre last
+            var val = line.Last();
+
+            if (methods.Contains(val))
             {
-                return  $"-m {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(methods))}\n" +
+                return  $"-m {val}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(methods))}\n" +
                         $"{GetMethodHelp()}";
             }
-            else if (heightFlag.Contains(helpFor[1..]))
+            else if (heightFlag.Contains(flagForHelp))
             {
-                return $"{prefix} {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(heightFlag))}";
+                return $"{prefix} {flagForHelp}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(heightFlag))}";
             }
-            else if (widthFlag.Contains(helpFor[1..]))
+            else if (widthFlag.Contains(flagForHelp))
             {
-                return $"{prefix} {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(widthFlag))}";
+                return $"{prefix} {flagForHelp}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(widthFlag))}";
             }
-            else if (brushFlag.Contains(helpFor[1..]))
+            else if (brushFlag.Contains(flagForHelp))
             {
-                return $"{prefix} {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(brushFlag))}";
+                return $"{prefix} {flagForHelp}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(brushFlag))}";
             }
-            else if (colorsFlag.Contains(helpFor[1..]))
+            else if (colorsFlag.Contains(flagForHelp))
             {
-                return $"{prefix} {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(colorsFlag))}";
+                return $"{prefix} {flagForHelp}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(colorsFlag))}";
             }
-            else if (setCornerFlag.Contains(helpFor[1..]))
+            else if (setCornerFlag.Contains(flagForHelp))
             {
-                return $"{prefix} {helpFor}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(setCornerFlag))}";
+                return $"{prefix} {flagForHelp}: {DescriptionHelper.GetDescription<MathBilliardsConfigurer>(nameof(setCornerFlag))}";
             }
 
             return string.Empty;

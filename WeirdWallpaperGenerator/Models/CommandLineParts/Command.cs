@@ -28,5 +28,15 @@ namespace WeirdWallpaperGenerator.Models.CommandLineParts
         }
 
         public bool IsHelpCommand => Flags.Any(flag => BasicCommandList.commandHelp.Contains(flag.Value));
+
+        public bool IsCommand()
+        {
+            return Value != null;
+        }
+
+        public bool IsCommand(IEnumerable<string> commandVariations)
+        {
+            return commandVariations.Contains(Value);
+        }
     }
 }
