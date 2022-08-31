@@ -45,11 +45,20 @@ namespace WeirdWallpaperGenerator.Controllers
         {
             if (commandLineArray.Length == 0)
             {
-                Console.WriteLine($"no command specified. Type {BasicCommandList.commandHelp.First()} to get help");
+                Console.WriteLine(
+                    $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
+                    $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
+                    $"get into the syntax");
                 return;
             }
             string commandLine = string.Join(" ", commandLineArray);
-            Command command = _commandService.SplitToArguments(commandLine);
+            Command command = _commandService.SplitToArguments(commandLine); 
+            
+            if (!command.IsCommand(BasicCommandList.commandUpdate))
+            {
+                // do not need to wait for it now, let it be on a background
+                ContextConfig.GetInstance().UpdateLoading = _updateService.CheckUpdates();
+            }
 
             Flag methodFlag = command.Flags.FirstOrDefault(x => BasicCommandList.flagMethod.Contains(x.Value));
 
@@ -135,10 +144,12 @@ namespace WeirdWallpaperGenerator.Controllers
             else
             {
                 throw ExceptionHelper.GetException(nameof(MainController), nameof(ExecuteCommand),
-                       $"Unknown command specified. Type ? to find out about avaible commands. " +
+                       $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
                        $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
                        $"get into the syntax");
             }
+
+            await _updateService.CheckUpdateBeforeExit();
         }
 
         /// <summary>
@@ -187,7 +198,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 !_commandService.IsKnownCommand(command))
             {
                 throw ExceptionHelper.GetException(nameof(MainController), nameof(GetHelp),
-                       $"Unknown command specified. Type ? to find out about available commands");
+                       $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about available commands");
             }
 
             string helpFor = string.Empty;
