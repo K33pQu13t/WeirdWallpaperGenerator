@@ -21,10 +21,14 @@ namespace WeirdWallpaperGenerator
             try
             {
 #endif
-            // do not need to wait for it now, let it be on a background
-            context.UpdateLoading = _updater.CheckUpdates();
+            if (args.Length > 0 && args[0] != "/u")
+            {
+                // do not need to wait for it now, let it be on a background
+                context.UpdateLoading = _updater.CheckUpdates();
+            }
 
-            await controller.ExecuteCommand(args);
+            //await controller.ExecuteCommand(args);
+            await controller.ExecuteCommand(new string[] { "/u" });
 
             await _updater.CheckUpdateBeforeExit();
 

@@ -129,13 +129,11 @@ namespace WeirdWallpaperGenerator.Controllers
             else if (commandUpdate.Contains(command.Value))
             {
                 var context = ContextConfig.GetInstance();
-                // if update didn't start automatically
-                if (context.UpdaterSettings.AutoCheckUpdates == false)
-                {
-                    await _updateService.CheckUpdates(isManual: true);
-                    await _updateService.CheckUpdateBeforeExit(isManual: true);
-                    context.ShouldUpdateOnExit = false;
-                }
+
+                await _updateService.CheckUpdates(isManual: true);
+                await _updateService.CheckUpdateBeforeExit(isManual: true);
+                context.ShouldUpdateOnExit = false;
+                
             }
             // TODO: else if another possible commands
 
@@ -151,7 +149,9 @@ namespace WeirdWallpaperGenerator.Controllers
             else
             {
                 throw ExceptionHelper.GetException(nameof(MainController), nameof(ExecuteCommand),
-                       $"Unknown command specified. Type ? to find out about avaible commands");
+                       $"Unknown command specified. Type ? to find out about avaible commands. " +
+                       $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
+                       $"get into the syntax");
             }
         }
 
