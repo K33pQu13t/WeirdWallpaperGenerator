@@ -99,7 +99,7 @@ namespace WeirdWallpaperGenerator.Services
         }
 
         /// <summary>
-        /// downloads only one file - config.json, to determine is newer version avaible
+        /// downloads only one file - config.json, to determine is newer version available
         /// </summary>
         /// <param name="isManual">true if updating from /update command, not automatically</param>
         /// <returns></returns>
@@ -232,7 +232,7 @@ namespace WeirdWallpaperGenerator.Services
                     nameof(UpdateService),
                     nameof(CheckUpdates),
                     "Tried to update, some of downloaded files was corrupted. " +
-                    "That probably means bad Internet connection " +
+                    "That probably means Internet interruptions " +
                     "or an error on the server. Try to fix Internet connection or " +
                     "download update manualy: \"https://github.com/K33pQu13t/WeirdWallpaperGenerator/Release build\"");
             }

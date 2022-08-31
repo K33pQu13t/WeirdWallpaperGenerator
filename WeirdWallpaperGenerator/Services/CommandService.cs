@@ -22,7 +22,7 @@ namespace WeirdWallpaperGenerator.Helpers
                 throw ExceptionHelper.GetException(
                  nameof(CommandService),
                  nameof(SplitToArguments),
-                 "No command specified");
+                 "No command specified. Type ? to find out about available commands");
             }
 
             if (!LineContainsCommand(commandLine, out string commandValue))
@@ -33,7 +33,7 @@ namespace WeirdWallpaperGenerator.Helpers
                    nameof(Helpers.CommandService),
                    nameof(SplitToArguments),
                    "All commands must be started from command (except help commands). " +
-                   "No command specified");
+                   "No command specified. Type ? to find out about available commands");
                 }
             }
 
@@ -72,7 +72,12 @@ namespace WeirdWallpaperGenerator.Helpers
                     if (command.Flags.Count > 0)
                     {
                         flag.Arguments.AddRange(
-                            command.Flags.Select(x => new Argument { Value = $"-{x.Value}", Flag = flag }));
+                            command.Flags.Select(x => new Argument 
+                            { 
+                                Value = $"-{x.Value} " +
+                                $"{(x.Arguments.Count > 0 && !string.IsNullOrEmpty(x.Arguments[0].Value) ? string.Join(' ', x.Arguments.ToArray().Select(arg => $"\"{arg.Value}\" ")) : "")}".Trim(),
+                                Flag = flag 
+                            }));
 
                         AddFlag(command, flag);
                         break;
@@ -91,7 +96,7 @@ namespace WeirdWallpaperGenerator.Helpers
 
                     if (string.IsNullOrEmpty(flag.Value))
                         throw ExceptionHelper.GetException(nameof(CommandService), nameof(SplitToArguments),
-                            "Bad command sequence. Type help for help"); 
+                            "Bad command sequence. Type ? for help"); 
                     flag.Arguments.Add(new Argument() { Value = part, Flag = flag });
 
                     AddFlag(command, flag);
@@ -107,6 +112,16 @@ namespace WeirdWallpaperGenerator.Helpers
             }
 
             return command;
+        }
+
+        public bool IsKnownCommand(Command command)
+        {
+            return command.IsCommand() && (
+                   command.IsCommand(BasicCommandList.commandGenerate)
+                || command.IsCommand(BasicCommandList.commandSetWallpaper)
+                || command.IsCommand(BasicCommandList.commandUpdate)
+                // TODO: Add new commands there
+                );
         }
 
         /// <summary>

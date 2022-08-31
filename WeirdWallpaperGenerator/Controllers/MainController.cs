@@ -35,26 +35,12 @@ namespace WeirdWallpaperGenerator.Controllers
 
         [Description("shows info about assembly")]
         private readonly string about = "about";
-        [Description("generates an image and saves it. Usage: \n" +
-            "  /g [flags]")]
-        private readonly string[] commandGenerate = new string[] { "g", "gen", "generate" };
-        [Description("generates an image, saves it and sets it as background image. Usage: \n" +
-            "  /sw [flags]")]
-        private readonly string[] commandSetWallpaper = new string[] { "sw", "setwp" };
-        [Description("checks if there is an update, and downloads it. Usage: \n" +
-            "  /u")]
-        private readonly string[] commandUpdate = new string[] { "update", "upd", "u" };
-
+      
         [Description("opens explorer's instance where generated picture was saved")]
         private readonly string[] flagShow = new string[] { "s", "show" };
         [Description("opens generated image by default system image viewer")]
         private readonly string[] flagOpen = new string[] { "o", "open" };
-        [Description(
-            "specifies a generation method. If not specified, then random method will be choosen, and some unique " +
-            "configuration flags are not allowed. " +
-            "Usage: -m {one of methods} [common generation flags like -w -h]")]
-        private readonly string[] flagMethod = new string[] { "m", "method" };
-
+       
         public async Task ExecuteCommand(string[] commandLineArray)
         {
             if (commandLineArray.Length == 0)
@@ -65,7 +51,7 @@ namespace WeirdWallpaperGenerator.Controllers
             string commandLine = string.Join(" ", commandLineArray);
             Command command = _commandService.SplitToArguments(commandLine);
 
-            Flag methodFlag = command.Flags.FirstOrDefault(x => flagMethod.Contains(x.Value));
+            Flag methodFlag = command.Flags.FirstOrDefault(x => BasicCommandList.flagMethod.Contains(x.Value));
 
             if (commandLine == about)
             {
@@ -75,7 +61,7 @@ namespace WeirdWallpaperGenerator.Controllers
             {
                 Console.WriteLine(GetHelp(command));
             }
-            else if (commandSetWallpaper.Contains(command.Value))
+            else if (BasicCommandList.commandSetWallpaper.Contains(command.Value))
             {
                 // for random method
                 if (methodFlag == null)
@@ -101,7 +87,7 @@ namespace WeirdWallpaperGenerator.Controllers
                         $"Unknown method \"{methodFlag.SingleArgumentValue}\" specified. Type -m ? to find out about available methods");
                 }
             }
-            else if (commandGenerate.Contains(command.Value))
+            else if (BasicCommandList.commandGenerate.Contains(command.Value))
             {
                 // for random method
                 if (methodFlag == null)
@@ -126,7 +112,7 @@ namespace WeirdWallpaperGenerator.Controllers
                         $"Unknown method \"{methodFlag.SingleArgumentValue}\" specified. Type -m ? to find out about available methods");
                 }
             }
-            else if (commandUpdate.Contains(command.Value))
+            else if (BasicCommandList.commandUpdate.Contains(command.Value))
             {
                 var context = ContextConfig.GetInstance();
 
@@ -197,9 +183,16 @@ namespace WeirdWallpaperGenerator.Controllers
 
         public string GetHelp(Command command = null)
         {
+            if (!string.IsNullOrEmpty(command.Value) &&
+                !_commandService.IsKnownCommand(command))
+            {
+                throw ExceptionHelper.GetException(nameof(MainController), nameof(GetHelp),
+                       $"Unknown command specified. Type ? to find out about available commands");
+            }
+
             string helpFor = string.Empty;
             if (command.Flags.Find(x => BasicCommandList.commandHelp.Contains(x.Value)).Arguments.Count() > 0)
-                helpFor = command.GetFlagValues(BasicCommandList.commandHelp).Last();
+                helpFor = command.GetFlagValues(BasicCommandList.commandHelp).Last().Trim();
 
             if (string.IsNullOrWhiteSpace(helpFor))
             {
@@ -209,15 +202,15 @@ namespace WeirdWallpaperGenerator.Controllers
                         $"List of generic commands and flags is presented below. Use \"help\" with parameters to get more.\n" +
                         $"Common usage: {{/command}} [flags with arguments]\n\n" +
                         $"Generic commands:\n" +
-                        $"{string.Join(", ", commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandGenerate))}\n" +
-                        $"{string.Join(", ", commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandSetWallpaper))}\n" +
-                        $"{string.Join(", ", commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandUpdate))}\n" +
+                        $"{string.Join(", ", BasicCommandList.commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandGenerate))}\n" +
+                        $"{string.Join(", ", BasicCommandList.commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandSetWallpaper))}\n" +
+                        $"{string.Join(", ", BasicCommandList.commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandUpdate))}\n" +
                         $"\nGeneric flags:\n" +
                         $"{string.Join(", ", flagShow.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagShow))}\n" +
                         $"{string.Join(", ", flagOpen.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagOpen))}\n" +
-                        $"{string.Join(", ", flagMethod.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagMethod))}\n" +
+                        $"{string.Join(", ", BasicCommandList.flagMethod.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.flagMethod))}\n" +
                         $"\n{GetListOfMethods()}\n" +
-                        $"\n{string.Join(", ", BasicCommandList.commandHelp)}: {DescriptionHelper.GetDescription<BasicCommandList>(nameof(Constants.BasicCommandList.commandHelp))}\n";
+                        $"\n{string.Join(", ", BasicCommandList.commandHelp)}: {DescriptionHelper.GetDescription<BasicCommandList>(nameof(BasicCommandList.commandHelp))}\n";
             }
             else
             {
@@ -226,17 +219,17 @@ namespace WeirdWallpaperGenerator.Controllers
                     return $"{about}: {DescriptionHelper.GetDescription<MainController>(nameof(about))}";
                 }
 
-                else if (commandGenerate.Contains(helpFor[1..])) 
+                else if (BasicCommandList.commandGenerate.Contains(helpFor[1..])) 
                 {
-                    return $"{string.Join(", ", commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandGenerate))}";
+                    return $"{string.Join(", ", BasicCommandList.commandGenerate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandGenerate))}";
                 }
-                else if (commandSetWallpaper.Contains(helpFor[1..]))
+                else if (BasicCommandList.commandSetWallpaper.Contains(helpFor[1..]))
                 {
-                    return $"{string.Join(", ", commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandSetWallpaper))}";
+                    return $"{string.Join(", ", BasicCommandList.commandSetWallpaper.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandSetWallpaper))}";
                 }
-                else if (commandUpdate.Contains(helpFor[1..]))
+                else if (BasicCommandList.commandUpdate.Contains(helpFor[1..]))
                 {
-                    return $"{string.Join(", ", commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(commandUpdate))}";
+                    return $"{string.Join(", ", BasicCommandList.commandUpdate.Select(x => $"/{x}"))}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.commandUpdate))}";
                 }
                 else if (BasicCommandList.commandHelp.Contains(helpFor))
                 {
@@ -251,14 +244,15 @@ namespace WeirdWallpaperGenerator.Controllers
                 {
                     return $"{string.Join(", ", flagOpen.Select(x => $"-{x}"))}: {DescriptionHelper.GetDescription<MainController>(nameof(flagOpen))}";
                 }
-                else if (flagMethod.Contains(helpFor[1..]))
+                else if (BasicCommandList.flagMethod.Contains(helpFor[1..]))
                 {
-                    return $"{helpFor}: {DescriptionHelper.GetDescription<MainController>(nameof(flagMethod))}\n" +
-                           $"\n{GetListOfMethods()}";
+                    return $"{helpFor}: {DescriptionHelper.GetDescription< BasicCommandList> (nameof(BasicCommandList.flagMethod))}\n" +
+                           $"\n{GetListOfMethods()}\n" +
+                           $"Type -m {{method_name}} ? to get more information about concrete method and it's flags";
                 }
-                else if (command.ContainsFlag(flagMethod))
+                else if (command.ContainsFlag(BasicCommandList.flagMethod))
                 {
-                    var method = command.GetFlagValue(flagMethod);
+                    var method = command.GetFlagValue(BasicCommandList.flagMethod);
                     if (_mathBilliardConfigurer.methods.Contains(method))
                     {
                         return _mathBilliardConfigurer.GetHelp(command);
