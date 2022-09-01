@@ -11,7 +11,7 @@ namespace WeirdWallpaperGenerator.Constants
             "Usage: \n" +
             "  [any command line] ?\n" +
             "Like \"/g -m mb ?\" gets the help about math billiards method generation")]
-        public static readonly string[] commandHelp = new string[] { "help", "?" };
+        public static readonly string[] commandHelp = new string[] { "?", "help" };
 
         [Description("generates an image and saves it. Usage: \n" +
           "  /g [flags]")]
