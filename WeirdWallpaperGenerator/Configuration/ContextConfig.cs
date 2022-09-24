@@ -1,9 +1,6 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using WeirdWallpaperGenerator.Models;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Serialization;
 
@@ -16,7 +13,7 @@ namespace WeirdWallpaperGenerator.Configuration
     {
         static private ContextConfig instance;
         private Config Config { get; }
-        private const string configFileName = "config.json";
+        private static string ConfigFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
 
         static private SystemMessagePrinter _printer;
         static private JsonSerializationService _jsonSerializationService;
@@ -46,7 +43,7 @@ namespace WeirdWallpaperGenerator.Configuration
             {
                 _printer = SystemMessagePrinter.GetInstance();
                 _jsonSerializationService = new JsonSerializationService();
-                if (!File.Exists(configFileName))
+                if (!File.Exists(ConfigFilePath))
                 {
                     instance = new ContextConfig(new Config());
                     Save();
@@ -55,8 +52,8 @@ namespace WeirdWallpaperGenerator.Configuration
                 {
                     try
                     {
-                        Config cfg = (Config)_jsonSerializationService.Deserialize(configFileName, typeof(Config));
-                        instance = new ContextConfig(cfg);
+                        var config = GetConfig();
+                        instance = new ContextConfig(config);
                     }
                     catch (Exception ex)
                     {
@@ -72,13 +69,32 @@ namespace WeirdWallpaperGenerator.Configuration
             return instance;
         }
 
+        private static Config GetConfig()
+        {
+            Config config = (Config)_jsonSerializationService.Deserialize(ConfigFilePath, typeof(Config));
+
+            // guarantee of exact path
+            foreach (var colorSet in config.ColorsSets.Sets)
+            {
+                if (!Path.IsPathRooted(colorSet.Path))
+                    colorSet.Path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, colorSet.Path);
+            }
+            if (!Path.IsPathRooted(config.EnvironmentSettings.SaveFolderPath))
+            {
+                config.EnvironmentSettings.SaveFolderPath = 
+                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, config.EnvironmentSettings.SaveFolderPath);
+            }
+
+            return config;
+        }
+
         public static void Save(Config cfg = null, string path = "")
         {
             if (cfg == null)
                 cfg = instance.Config;
 
             if (string.IsNullOrEmpty(path))
-                path = configFileName;
+                path = ConfigFilePath;
 
             _jsonSerializationService.Serialize(path, cfg);
         }
