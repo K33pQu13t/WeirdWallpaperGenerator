@@ -49,7 +49,7 @@ namespace WeirdWallpaperGenerator.Controllers
         {
             if (commandLineArray.Length == 0)
             {
-                Console.WriteLine(
+                _printer.Print(
                     $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
                     $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
                     $"get into the syntax");
@@ -68,11 +68,11 @@ namespace WeirdWallpaperGenerator.Controllers
 
             if (commandLine == about)
             {
-                Console.WriteLine($"\n{GetAbout()}");
+                _printer.Print($"\n{GetAbout()}");
             }
             else if (command.IsHelpCommand) 
             {
-                Console.WriteLine(GetHelp(command));
+                _printer.Print(GetHelp(command));
             }
             else if (BasicCommandList.commandSetWallpaper.Contains(command.Value))
             {
