@@ -4,9 +4,12 @@ using WeirdWallpaperGenerator.Enums;
 
 namespace WeirdWallpaperGenerator.Services
 {
-    internal class SystemMessagePrinter
+    /// <summary>
+    /// Provides async-safe service for console printing
+    /// </summary>
+    internal class MessagePrinterService
     {
-        private static SemaphoreSlim semaphore = new SemaphoreSlim(1, 1);
+        private static SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         readonly string _errorTitle;
         readonly string _warningTitle;
@@ -18,8 +21,8 @@ namespace WeirdWallpaperGenerator.Services
         readonly ConsoleColorNullable _successColor;
         readonly ConsoleColorNullable _logColor;
 
-        private static SystemMessagePrinter instance;
-        private SystemMessagePrinter(
+        private static MessagePrinterService instance;
+        private MessagePrinterService(
             string errorTitle = "",
             string warningTitle = "",
             string successTitle = "",
@@ -41,7 +44,7 @@ namespace WeirdWallpaperGenerator.Services
             _logColor = logColor;
         }
 
-        public static SystemMessagePrinter GetInstance(
+        public static MessagePrinterService GetInstance(
             string errorTitle = "",
             string warningTitle = "",
             string successTitle = "",
@@ -53,7 +56,7 @@ namespace WeirdWallpaperGenerator.Services
             )
         {
             if (instance == null)
-                instance = new SystemMessagePrinter(
+                instance = new MessagePrinterService(
                     errorTitle,
                     warningTitle,
                     successTitle,
@@ -67,11 +70,16 @@ namespace WeirdWallpaperGenerator.Services
 
         private void Print(string message, ConsoleColor color)
         {
-            semaphore.Wait();
+            _semaphore.Wait();
             Console.ForegroundColor = color;
             Console.WriteLine(message);
             Console.ResetColor();
-            semaphore.Release();
+            _semaphore.Release();
+        }
+
+        internal void Print(string message)
+        {
+            Print(message, Console.ForegroundColor);
         }
 
         internal void PrintError(string message, bool putPrefix = true)
