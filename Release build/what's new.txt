@@ -1,0 +1,22 @@
+Version 1.0.2
+Release date: 31.08.2022
+
+  * Fix critical error of executing any command (still doesn't have any idea what it was, just recompilled and it works)
+  * Improve expirience - make several errors a bit more informative
+  * Fix help - help about exactly method gives information about method and it's flags, like -m mb ?, when -m ? gives help about -m flag
+
+
+----===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===----
+
+Version 1.0.1
+Release date: 29.08.2022
+
+ * Added help. Type help or ? before or after any command or flag to get details about it
+ 
+ * Improved color flag. Check -m mb -c ? ? to get details
+ 
+ * Fixed generation and set wallpaper command. You can just type /g or /sw for generate image by random method (but for now there is only one method)
+
+ * Added update mechanism. You can stop checking update, setting flag AutoCheckUpdates to false in config.json. You can also set period of checking by CheckPeriodDays and turn of asking before update by AskBeforeUpdate
+ 
+ * Refactoring and small improvements
