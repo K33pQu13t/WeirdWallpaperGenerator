@@ -18,7 +18,7 @@ namespace WeirdWallpaperGenerator.Configuration
         private Config Config { get; }
         private const string configFileName = "config.json";
 
-        static private SystemMessagePrinter _printer;
+        static private MessagePrinterService _printer;
         static private JsonSerializationService _jsonSerializationService;
 
         public About About => Config.About;
@@ -44,7 +44,7 @@ namespace WeirdWallpaperGenerator.Configuration
         {
             if (instance == null)
             {
-                _printer = SystemMessagePrinter.GetInstance();
+                _printer = MessagePrinterService.GetInstance();
                 _jsonSerializationService = new JsonSerializationService();
                 if (!File.Exists(configFileName))
                 {

@@ -18,7 +18,7 @@ namespace WeirdWallpaperGenerator
         private void Configure()
         {
             // get its instance to preset it for whole application on the start
-            SystemMessagePrinter.GetInstance(
+            MessagePrinterService.GetInstance(
                 "[Error]",
                 "[Warning]",
                 "[Success]",

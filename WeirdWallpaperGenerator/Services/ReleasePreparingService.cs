@@ -24,7 +24,7 @@ namespace WeirdWallpaperGenerator.Services
 
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
 
-        SystemMessagePrinter _printer;
+        MessagePrinterService _printer;
         BinarySerializationService _binarySerializationService = new BinarySerializationService();
         JsonSerializationService _jsonSerializationService = new JsonSerializationService();
 
@@ -37,7 +37,7 @@ namespace WeirdWallpaperGenerator.Services
 
         public ReleasePreparingService()
         {
-            _printer = SystemMessagePrinter.GetInstance();
+            _printer = MessagePrinterService.GetInstance();
         }
 
         internal void Prepare(VersionStack versionUpdate)

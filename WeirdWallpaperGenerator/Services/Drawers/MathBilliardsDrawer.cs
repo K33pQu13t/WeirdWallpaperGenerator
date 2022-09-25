@@ -87,8 +87,12 @@ namespace WeirdWallpaperGenerator.Services.Drawers
         private Color _fillInsideColor;
         private Color _fillOutsideColor;
 
-        public MathBilliardsDrawer(MathBilliardsConfigDTO config)
+        private readonly BitmapService _bitmapService;
+
+        public MathBilliardsDrawer(MathBilliardsConfigDto config)
         {
+            _bitmapService = new BitmapService();
+
             _height = config.Height.Value;
             _width = config.Width.Value;
             _brushSize = config.BrushSize;
@@ -112,7 +116,11 @@ namespace WeirdWallpaperGenerator.Services.Drawers
 
         public string GetArguments()
         {
-            return $"-m mb -h {_height} -w {_width} -c \'{_fillOutsideColor.ToHex()}, {_fillInsideColor.ToHex()}\' -b {_brushSize} -sp {_startPosition}";
+            return $"-m mathbilliards " +
+                $"-h {_height} -w {_width} " +
+                $"-c \'{_fillOutsideColor.ToHex()}, {_fillInsideColor.ToHex()}\' " +
+                $"-b {_brushSize} " +
+                $"-sp {_startPosition}";
         }
 
         /// <summary>
@@ -206,7 +214,7 @@ namespace WeirdWallpaperGenerator.Services.Drawers
 
         private void DrawInternal()
         {
-            ColorCurrentPattern();
+            _bitmapService.FillBitmapArea(_bitmap, x, y, _brushSize, _brushSize, _currentColor);
 
             try
             {
@@ -223,25 +231,6 @@ namespace WeirdWallpaperGenerator.Services.Drawers
             }
 
             SwitchColor();
-        }
-        /// <summary>
-        /// colors one brush pattern. Start X and Y is left-up corner of pattern
-        /// </summary>
-        private void ColorCurrentPattern()
-        {
-            for (int i = x; i < x + _brushSize; i++)
-            {
-                for (int j = y; j < y + _brushSize; j++)
-                {
-                    //if (i >= _width || j >= _height)
-                    //{
-                    //    //_bitmap.Save($"error {GetConfig()}.png");
-                    //    Console.WriteLine();
-                    //}
-                    //_bitmap.Save($"error {GetConfig()}.png");
-                    _bitmap.SetPixel(i, j, _currentColor);
-                }
-            }
         }
 
         private void DrawBackground()

@@ -46,12 +46,12 @@ namespace WeirdWallpaperGenerator.Services
 
         BinarySerializationService _serializationService = new BinarySerializationService();
         JsonSerializationService _jsonSerializationService = new JsonSerializationService();
-        SystemMessagePrinter _systemMessagePrinter;
+        MessagePrinterService _systemMessagePrinter;
         ContextConfig _contextConfig = ContextConfig.GetInstance();
 
         public UpdateService()
         {
-            _systemMessagePrinter = SystemMessagePrinter.GetInstance();
+            _systemMessagePrinter = MessagePrinterService.GetInstance();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.UserAgent.Add(

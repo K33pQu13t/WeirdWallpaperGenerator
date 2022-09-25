@@ -19,7 +19,7 @@ namespace WeirdWallpaperGenerator.Models.CommandLineParts
         public IEnumerable<string> GetFlagValues(IEnumerable<string> flagVariations)
         {
             return Flags.Find(x => flagVariations.Contains(x.Value))
-                .Arguments.Select(x => x.Value);
+                ?.Arguments.Select(x => x.Value) ?? new List<string>();
         }
 
         public bool ContainsFlag(IEnumerable<string> flagVariations)

@@ -24,7 +24,8 @@ namespace WeirdWallpaperGenerator
             // do not need to wait for it now, let it be on a background
             context.UpdateLoading = _updater.CheckUpdates();
 
-            await controller.ExecuteCommand(args);
+            //await controller.ExecuteCommand(args);
+            await controller.ExecuteCommand(new string[] { "/g -o" });
 
             await _updater.CheckUpdateBeforeExit();
 
