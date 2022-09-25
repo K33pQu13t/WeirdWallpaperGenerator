@@ -26,7 +26,7 @@ namespace WeirdWallpaperGenerator.Services
         private const string hashTableFileName = "hashtable";
         private const string pdbFile = "WeirdWallpaperGenerator.pdb";
         private const string updateButchFile = "update.bat";
-        private const string whatsNewFile = "what's new.txt";
+        private const string whatsNewFile = "whats new.txt";
 
         public string ReleaseFolderName => "Release build";
 
@@ -76,7 +76,11 @@ namespace WeirdWallpaperGenerator.Services
                 _systemMessagePrinter.PrintLog("Downloading updates");
 #endif
                 if (isManual)
-                    _systemMessagePrinter.PrintLog("Newer version found. Downloading...", false);
+                {
+                    Config updateConfig = (Config)_jsonSerializationService.Deserialize(ConfigFileUpdatePath, typeof(Config));
+                    _systemMessagePrinter.PrintLog($"Newer version ({updateConfig.About.Version}) found. Downloading...", false);
+                }
+
                 await GetUpdate(ReleaseFolderName);
                 await ShouldUpdateOnExit();
             }
@@ -140,7 +144,7 @@ namespace WeirdWallpaperGenerator.Services
                 "WeirdWallpaperGenerator.deps.json",
                 "WeirdWallpaperGenerator.runtimeconfig.json",
                 "WeirdWallpaperGenerator.runtimeconfig.dev.json",
-                "what's new.txt"
+                "whats new.txt"
             };
 
             List<string> filenamesWithBadIntegrity = new List<string>() { };
@@ -193,7 +197,7 @@ namespace WeirdWallpaperGenerator.Services
         public async Task CheckUpdateBeforeExit(bool isManual = false)
         {
             // wait for update to download
-            if (_contextConfig.UpdateLoading.Status == TaskStatus.WaitingForActivation)
+            if (_contextConfig.UpdateLoading != null && _contextConfig.UpdateLoading.Status == TaskStatus.WaitingForActivation)
                 await _contextConfig.UpdateLoading;
 
             if (_contextConfig.ShouldUpdateOnExit)
