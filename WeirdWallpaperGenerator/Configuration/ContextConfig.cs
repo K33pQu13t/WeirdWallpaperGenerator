@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Serialization;
@@ -13,7 +14,11 @@ namespace WeirdWallpaperGenerator.Configuration
     {
         static private ContextConfig instance;
         private Config Config { get; }
-        private static string ConfigFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "config.json");
+        /// <summary>
+        /// Application exe's directory
+        /// </summary>
+        public static string AppDirectory { get; private set; }
+        private static string ConfigFilePath => Path.Combine(AppDirectory, "config.json");
 
         static private MessagePrinterService _printer;
         static private JsonSerializationService _jsonSerializationService;
@@ -41,6 +46,8 @@ namespace WeirdWallpaperGenerator.Configuration
         {
             if (instance == null)
             {
+                AppDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+
                 _printer = MessagePrinterService.GetInstance();
                 _jsonSerializationService = new JsonSerializationService();
                 if (!File.Exists(ConfigFilePath))
@@ -77,12 +84,12 @@ namespace WeirdWallpaperGenerator.Configuration
             foreach (var colorSet in config.ColorsSets.Sets)
             {
                 if (!Path.IsPathRooted(colorSet.Path))
-                    colorSet.Path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, colorSet.Path);
+                    colorSet.Path = Path.Combine(AppDirectory, colorSet.Path);
             }
             if (!Path.IsPathRooted(config.EnvironmentSettings.SaveFolderPath))
             {
                 config.EnvironmentSettings.SaveFolderPath = 
-                    Path.Combine(AppDomain.CurrentDomain.BaseDirectory, config.EnvironmentSettings.SaveFolderPath);
+                    Path.Combine(AppDirectory, config.EnvironmentSettings.SaveFolderPath);
             }
 
             return config;

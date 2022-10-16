@@ -37,7 +37,7 @@ namespace WeirdWallpaperGenerator.Services
         public string ConfigFileUpdatePath => Path.Combine(UpdatePath, configFileName);
         public string HashTableFileUpdatePath => Path.Combine(UpdatePath, hashTableFileName);
         private string UpdateBatchFilePath => Path.Combine(UpdatePath, updateButchFile);
-        private string WhatsNewFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, whatsNewFile);
+        private string WhatsNewFilePath => Path.Combine(ContextConfig.AppDirectory, whatsNewFile);
 
         readonly string _mainUrl;
 
@@ -86,7 +86,12 @@ namespace WeirdWallpaperGenerator.Services
             }
             else if (isManual)
                 _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
-
+#if DEBUG
+            else
+            {
+                _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
+            }
+#endif
             _contextConfig.UpdaterSettings.LastUpdateCheckDate = DateTime.Now.Date;
         }
 
@@ -144,7 +149,8 @@ namespace WeirdWallpaperGenerator.Services
                 "WeirdWallpaperGenerator.deps.json",
                 "WeirdWallpaperGenerator.runtimeconfig.json",
                 "WeirdWallpaperGenerator.runtimeconfig.dev.json",
-                "whats new.txt"
+                "whats new.txt",
+                "what's new.txt"
             };
 
             List<string> filenamesWithBadIntegrity = new List<string>() { };
@@ -276,8 +282,8 @@ namespace WeirdWallpaperGenerator.Services
                 }).Contains(Path.GetFileName(fileName))).ToList();
 
             string commands = string.Join('\n',
-                GenerateDeletionCommand(files, AppDomain.CurrentDomain.BaseDirectory),
-                GenerateCopyCommand(files, AppDomain.CurrentDomain.BaseDirectory),
+                GenerateDeletionCommand(files, ContextConfig.AppDirectory),
+                GenerateCopyCommand(files, ContextConfig.AppDirectory),
                 GenerateStartWhatsNewCommand(),
                 GenerateCleanup()
                 );
@@ -433,10 +439,9 @@ namespace WeirdWallpaperGenerator.Services
 
         public List<string> GetCurrentVersionFilesGithubSha1Hashes()
         {
-            var path = AppDomain.CurrentDomain.BaseDirectory;
             List<string> hashes = new List<string>();
 
-            string[] filesPaths = Directory.GetFiles(path);
+            string[] filesPaths = Directory.GetFiles(ContextConfig.AppDirectory);
             foreach (string filePath in filesPaths)
             {
                 hashes.Add(HashHelper.GetSHA1ChecksumGithub(filePath));

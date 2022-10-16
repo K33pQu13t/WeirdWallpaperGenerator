@@ -29,7 +29,8 @@ namespace WeirdWallpaperGenerator.Helpers
 
             if (!LineContainsCommand(commandLine, out string commandValue))
             {
-                if (!commands.Any(x => BasicCommandList.commandHelp.Contains(x)))
+                if (!commands.Any(x => BasicCommandList.commandHelp.Contains(x) 
+                    || BasicCommandList.commandAbout.Contains(x)))
                 {
                     throw ExceptionHelper.GetException(
                    nameof(CommandService),
@@ -95,6 +96,12 @@ namespace WeirdWallpaperGenerator.Helpers
                 {
                     if (helpFlagFounded)
                         continue;
+
+                    if (BasicCommandList.commandAbout.Contains(part))
+                    {
+                        command.Value = part;
+                        continue;
+                    }
 
                     if (string.IsNullOrEmpty(flag.Value))
                         throw ExceptionHelper.GetException(nameof(CommandService), nameof(SplitToArguments),

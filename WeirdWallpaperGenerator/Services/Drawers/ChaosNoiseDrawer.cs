@@ -76,8 +76,8 @@ namespace WeirdWallpaperGenerator.Services.Drawers
         public string GetArguments()
         {
             return $"-m chaosnoise " +
-                  $"-h {_height} -w {_width}" +
-                  $"-c \'{_coloredColor.ToHex()} {_backgroundColor.ToHex()}\'" +
+                  $"-h {_height} -w {_width} " +
+                  $"-c \'{_coloredColor.ToHex()} {_backgroundColor.ToHex()}\' " +
                   $"-b {_brushSizeX} {_brushSizeY}";
         }
     }

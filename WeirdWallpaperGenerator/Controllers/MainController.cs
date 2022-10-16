@@ -35,8 +35,6 @@ namespace WeirdWallpaperGenerator.Controllers
         private readonly UpdateService _updateService = new UpdateService();
         private readonly CommandService _commandService = new CommandService();
 
-        [Description("shows info about assembly")]
-        private readonly string about = "about";
       
         [Description("opens explorer's instance where generated picture was saved")]
         private readonly string[] flagShow = new string[] { "s", "show" };
@@ -66,7 +64,7 @@ namespace WeirdWallpaperGenerator.Controllers
 
             Flag methodFlag = command.Flags.FirstOrDefault(x => BasicCommandList.flagMethod.Contains(x.Value));
 
-            if (commandLine == about)
+            if (BasicCommandList.commandAbout.Contains(commandLine))
             {
                 _printer.Print($"\n{GetAbout()}");
             }
@@ -188,7 +186,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 ContextConfig.GetInstance().EnvironmentSettings.SaveFolderPath);
             Directory.CreateDirectory(folderPath);
             string path = Path.GetFullPath(Path.Combine(folderPath, title));
-            
+
             background.Save(path);
 
             _printer.PrintSuccess("Wallpaper has been generated!");
@@ -246,9 +244,9 @@ namespace WeirdWallpaperGenerator.Controllers
             }
             else
             {
-                if (helpFor == about)
+                if (BasicCommandList.commandAbout.Contains(helpFor))
                 {
-                    return $"{about}: {DescriptionHelper.GetDescription<MainController>(nameof(about))}";
+                    return $"{BasicCommandList.commandAbout[0]}: {DescriptionHelper.GetDescription<BasicCommandList>(nameof(BasicCommandList.commandAbout))}";
                 }
 
                 else if (BasicCommandList.commandGenerate.Contains(helpFor[1..])) 
@@ -317,7 +315,7 @@ namespace WeirdWallpaperGenerator.Controllers
             var about = ContextConfig.GetInstance().About;
             return  $"{about.ProjectName}\n" +
                     $"version: {about.Version}\n" +
-                    $"release date: {about.ReleaseDate}\n" +
+                    $"release date: {about.ReleaseDate:dd/MM/yyyy}\n" +
                     $"author: {about.Author}";
         }
     }
