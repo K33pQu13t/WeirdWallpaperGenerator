@@ -1,3 +1,11 @@
+Version 1.1.2
+Release date: 16.10.2022
+
+  * Fixed hashing algorithm so it's able to update to new release
+
+
+----===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===--===----
+
 Version 1.1.0
 Release date: 16.10.2022
 
