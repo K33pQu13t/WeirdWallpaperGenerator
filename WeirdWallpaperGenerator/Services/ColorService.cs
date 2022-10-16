@@ -48,7 +48,6 @@ namespace WeirdWallpaperGenerator.Services
 
         public Color GetRandomColorFromSets(List<ColorSet> sets, out ColorSet choosenSet)
         {
-            Console.WriteLine($"app directory: {ContextConfig.AppDirectory}");
             if (sets == null || sets.Count == 0)
             {
                 throw ExceptionHelper.GetException(nameof(ColorService), nameof(GetRandomColorFromSets), 

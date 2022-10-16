@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Serialization;
