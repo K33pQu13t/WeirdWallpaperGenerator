@@ -14,6 +14,7 @@ namespace WeirdWallpaperGenerator.Services
         const string buildFolder = @"..\..\..\..\Release build";
         const string configFileName = "config.json";
         const string hashTableFileName = "hashtable";
+        const string whatsNewFileName = "whats new.txt";
 
         const string colorsFolderName = "colors";
 
@@ -55,7 +56,7 @@ namespace WeirdWallpaperGenerator.Services
             HashTable hashTable = new HashTable
             {
                 Version = config.About.Version,
-                Table = HashHelper.GetSHA1ChecksumFromFolder(buildFolder, new string[] { configFileName, hashTableFileName })
+                Table = HashHelper.GetSHA1ChecksumFromFolder(buildFolder, new string[] { configFileName, hashTableFileName, whatsNewFileName })
             };
 
             _binarySerializationService.Serialize(Path.Combine(buildFolder, hashTableFileName).ToString(), hashTable);
