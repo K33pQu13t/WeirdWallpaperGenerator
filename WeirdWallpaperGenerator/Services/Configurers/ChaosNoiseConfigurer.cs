@@ -41,7 +41,6 @@ namespace WeirdWallpaperGenerator.Services.Configurers
             var colors = GetColors(command);
             config.ColoredColor = colors[0];
             config.BackgroundColor = colors[1];
-
            
             List<string> args = command.GetFlagValues(brushFlag).ToList();
             if (args.Count == 0)

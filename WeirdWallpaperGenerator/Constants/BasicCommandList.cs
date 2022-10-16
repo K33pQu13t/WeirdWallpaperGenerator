@@ -13,6 +13,9 @@ namespace WeirdWallpaperGenerator.Constants
             "Like \"/g -m mb ?\" gets the help about math billiards method generation")]
         public static readonly string[] commandHelp = new string[] { "help", "?" };
 
+        [Description("shows info about assembly")]
+        public static readonly string[] commandAbout = new string[] { "about" };
+
         [Description("generates an image and saves it. Usage: \n" +
           "  /g [flags]")]
         public static readonly string[] commandGenerate = new string[] { "g", "gen", "generate" };

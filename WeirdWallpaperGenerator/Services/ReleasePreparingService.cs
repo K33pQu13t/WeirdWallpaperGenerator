@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +19,7 @@ namespace WeirdWallpaperGenerator.Services
 
         string ConfigFileBuildPath => Path.Combine(buildFolder, configFileName);
         string ColorsFolderBuildPath => Path.Combine(buildFolder, colorsFolderName);
-        string ColorsFolderDevPath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, colorsFolderName);
+        string ColorsFolderDevPath => Path.Combine(ContextConfig.AppDirectory, colorsFolderName);
 
         readonly string[] garbage = new string[] { "WeirdWallpaperGenerator.pdb" };
 

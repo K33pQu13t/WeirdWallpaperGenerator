@@ -178,6 +178,8 @@ namespace WeirdWallpaperGenerator.Services.Configurers
                      $"\"{ex.FileName}\" file was not found. Check config.json and make sure colors paths exists");
             }
 
+            Console.WriteLine(color1.ToHex());
+            Console.WriteLine(color2.ToHex());
             return new List<Color> { color1, color2 };
         }
 
@@ -197,6 +199,8 @@ namespace WeirdWallpaperGenerator.Services.Configurers
                 }
                 else
                 {
+                    Console.WriteLine("Color sets from config: ");
+                    _contextConfig.ColorsSets.Sets.ForEach(s => Console.WriteLine(s.Title));
                     var set = _contextConfig.ColorsSets.Sets.FirstOrDefault(s => s.Title.ToLower() == value.ToLower());
                     if (set == null)
                     {

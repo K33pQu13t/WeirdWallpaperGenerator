@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Controllers;
+using WeirdWallpaperGenerator.Services;
 
 namespace WeirdWallpaperGenerator
 {
@@ -22,7 +23,7 @@ namespace WeirdWallpaperGenerator
             }
             catch (Exception ex)
             {
-                SystemMessagePrinter.GetInstance().PrintError(ex.Message);
+                MessagePrinterService.GetInstance().PrintError(ex.Message);
             }
 #endif
         }
