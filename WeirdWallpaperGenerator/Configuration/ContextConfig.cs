@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using WeirdWallpaperGenerator.Services;
 using WeirdWallpaperGenerator.Services.Serialization;
@@ -46,7 +46,7 @@ namespace WeirdWallpaperGenerator.Configuration
         {
             if (instance == null)
             {
-                AppDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                AppDirectory = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
                 _printer = MessagePrinterService.GetInstance();
                 _jsonSerializationService = new JsonSerializationService();
