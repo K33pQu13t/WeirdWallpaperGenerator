@@ -26,7 +26,7 @@ namespace WeirdWallpaperGenerator.Services
         private const string hashTableFileName = "hashtable";
         private const string pdbFile = "WeirdWallpaperGenerator.pdb";
         private const string updateButchFile = "update.bat";
-        private const string whatsNewFile = "what's new.txt";
+        private const string whatsNewFile = "whats new.txt";
 
         public string ReleaseFolderName => "Release build";
 
@@ -37,7 +37,7 @@ namespace WeirdWallpaperGenerator.Services
         public string ConfigFileUpdatePath => Path.Combine(UpdatePath, configFileName);
         public string HashTableFileUpdatePath => Path.Combine(UpdatePath, hashTableFileName);
         private string UpdateBatchFilePath => Path.Combine(UpdatePath, updateButchFile);
-        private string WhatsNewFilePath => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, whatsNewFile);
+        private string WhatsNewFilePath => Path.Combine(ContextConfig.AppDirectory, whatsNewFile);
 
         readonly string _mainUrl;
 
@@ -46,12 +46,12 @@ namespace WeirdWallpaperGenerator.Services
 
         BinarySerializationService _serializationService = new BinarySerializationService();
         JsonSerializationService _jsonSerializationService = new JsonSerializationService();
-        SystemMessagePrinter _systemMessagePrinter;
+        MessagePrinterService _systemMessagePrinter;
         ContextConfig _contextConfig = ContextConfig.GetInstance();
 
         public UpdateService()
         {
-            _systemMessagePrinter = SystemMessagePrinter.GetInstance();
+            _systemMessagePrinter = MessagePrinterService.GetInstance();
 
             _client = new HttpClient();
             _client.DefaultRequestHeaders.UserAgent.Add(
@@ -76,13 +76,22 @@ namespace WeirdWallpaperGenerator.Services
                 _systemMessagePrinter.PrintLog("Downloading updates");
 #endif
                 if (isManual)
-                    _systemMessagePrinter.PrintLog("Newer version found. Downloading...", false);
+                {
+                    Config updateConfig = (Config)_jsonSerializationService.Deserialize(ConfigFileUpdatePath, typeof(Config));
+                    _systemMessagePrinter.PrintLog($"Newer version ({updateConfig.About.Version}) found. Downloading...", false);
+                }
+
                 await GetUpdate(ReleaseFolderName);
                 await ShouldUpdateOnExit();
             }
             else if (isManual)
                 _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
-
+#if DEBUG
+            else
+            {
+                _systemMessagePrinter.PrintLog("App is up to date, no need to update", false);
+            }
+#endif
             _contextConfig.UpdaterSettings.LastUpdateCheckDate = DateTime.Now.Date;
         }
 
@@ -140,6 +149,7 @@ namespace WeirdWallpaperGenerator.Services
                 "WeirdWallpaperGenerator.deps.json",
                 "WeirdWallpaperGenerator.runtimeconfig.json",
                 "WeirdWallpaperGenerator.runtimeconfig.dev.json",
+                "whats new.txt",
                 "what's new.txt"
             };
 
@@ -193,7 +203,7 @@ namespace WeirdWallpaperGenerator.Services
         public async Task CheckUpdateBeforeExit(bool isManual = false)
         {
             // wait for update to download
-            if (_contextConfig.UpdateLoading.Status == TaskStatus.WaitingForActivation)
+            if (_contextConfig.UpdateLoading != null && _contextConfig.UpdateLoading.Status == TaskStatus.WaitingForActivation)
                 await _contextConfig.UpdateLoading;
 
             if (_contextConfig.ShouldUpdateOnExit)
@@ -272,8 +282,8 @@ namespace WeirdWallpaperGenerator.Services
                 }).Contains(Path.GetFileName(fileName))).ToList();
 
             string commands = string.Join('\n',
-                GenerateDeletionCommand(files, AppDomain.CurrentDomain.BaseDirectory),
-                GenerateCopyCommand(files, AppDomain.CurrentDomain.BaseDirectory),
+                GenerateDeletionCommand(files, ContextConfig.AppDirectory),
+                GenerateCopyCommand(files, ContextConfig.AppDirectory),
                 GenerateStartWhatsNewCommand(),
                 GenerateCleanup()
                 );
@@ -429,10 +439,9 @@ namespace WeirdWallpaperGenerator.Services
 
         public List<string> GetCurrentVersionFilesGithubSha1Hashes()
         {
-            var path = AppDomain.CurrentDomain.BaseDirectory;
             List<string> hashes = new List<string>();
 
-            string[] filesPaths = Directory.GetFiles(path);
+            string[] filesPaths = Directory.GetFiles(ContextConfig.AppDirectory);
             foreach (string filePath in filesPaths)
             {
                 hashes.Add(HashHelper.GetSHA1ChecksumGithub(filePath));

@@ -48,6 +48,12 @@ namespace WeirdWallpaperGenerator.Services
 
         public Color GetRandomColorFromSets(List<ColorSet> sets, out ColorSet choosenSet)
         {
+            if (sets == null || sets.Count == 0)
+            {
+                throw ExceptionHelper.GetException(nameof(ColorService), nameof(GetRandomColorFromSets), 
+                    $"Attempt to get color from empty colors' list");
+            }
+
             choosenSet = sets[_rnd.Next(0, sets.Count)];
 
             var colorsFromSet = GetColorsFromFile(choosenSet.Path);

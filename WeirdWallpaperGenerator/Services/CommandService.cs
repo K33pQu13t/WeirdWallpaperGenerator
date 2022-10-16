@@ -22,17 +22,20 @@ namespace WeirdWallpaperGenerator.Helpers
                 throw ExceptionHelper.GetException(
                  nameof(CommandService),
                  nameof(SplitToArguments),
-                 "No command specified. Type ? to find out about available commands");
+                    $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
+                    $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
+                    $"get into the syntax");
             }
 
             if (!LineContainsCommand(commandLine, out string commandValue))
             {
-                if (!commands.Any(x => BasicCommandList.commandHelp.Contains(x)))
+                if (!commands.Any(x => BasicCommandList.commandHelp.Contains(x) 
+                    || BasicCommandList.commandAbout.Contains(x)))
                 {
                     throw ExceptionHelper.GetException(
-                   nameof(Helpers.CommandService),
+                   nameof(CommandService),
                    nameof(SplitToArguments),
-                   "All commands must be started from command (except help commands). " +
+                   "All commands must be started from command (except help commands and about). " +
                    "No command specified. Type ? to find out about available commands");
                 }
             }
@@ -93,6 +96,12 @@ namespace WeirdWallpaperGenerator.Helpers
                 {
                     if (helpFlagFounded)
                         continue;
+
+                    if (BasicCommandList.commandAbout.Contains(part))
+                    {
+                        command.Value = part;
+                        continue;
+                    }
 
                     if (string.IsNullOrEmpty(flag.Value))
                         throw ExceptionHelper.GetException(nameof(CommandService), nameof(SplitToArguments),

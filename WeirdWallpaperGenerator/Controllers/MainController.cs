@@ -28,38 +28,49 @@ namespace WeirdWallpaperGenerator.Controllers
         private readonly uint SPIF_SENDWININICHANGE = 0x02;
 
         private readonly MathBilliardsConfigurer _mathBilliardConfigurer = new MathBilliardsConfigurer();
-        private readonly SystemMessagePrinter _printer = SystemMessagePrinter.GetInstance();
+        private readonly ChaosNoiseConfigurer _chaosNoiseConfigurer = new ChaosNoiseConfigurer();
+
+        private readonly MessagePrinterService _printer = MessagePrinterService.GetInstance();
         private readonly ReleasePreparingService _releasePreparingService = new ReleasePreparingService();
         private readonly UpdateService _updateService = new UpdateService();
         private readonly CommandService _commandService = new CommandService();
 
-        [Description("shows info about assembly")]
-        private readonly string about = "about";
       
         [Description("opens explorer's instance where generated picture was saved")]
         private readonly string[] flagShow = new string[] { "s", "show" };
         [Description("opens generated image by default system image viewer")]
         private readonly string[] flagOpen = new string[] { "o", "open" };
-       
+
+        SecureRandomService _rnd = new SecureRandomService();
+
         public async Task ExecuteCommand(string[] commandLineArray)
         {
             if (commandLineArray.Length == 0)
             {
-                Console.WriteLine($"no command specified. Type {BasicCommandList.commandHelp.First()} to get help");
+                _printer.Print(
+                    $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
+                    $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
+                    $"get into the syntax");
                 return;
             }
             string commandLine = string.Join(" ", commandLineArray);
-            Command command = _commandService.SplitToArguments(commandLine);
+            Command command = _commandService.SplitToArguments(commandLine); 
+            
+            if (!command.IsCommand(BasicCommandList.commandUpdate))
+            {
+                // do not need to wait for it now, let it be on a background
+                ContextConfig.GetInstance().UpdateLoading = _updateService.CheckUpdates();
+            }
 
             Flag methodFlag = command.Flags.FirstOrDefault(x => BasicCommandList.flagMethod.Contains(x.Value));
 
-            if (commandLine == about)
+            if (BasicCommandList.commandAbout.Contains(commandLine))
             {
-                Console.WriteLine($"\n{GetAbout()}");
+                _printer.Print($"\n{GetAbout()}");
             }
             else if (command.IsHelpCommand) 
             {
-                Console.WriteLine(GetHelp(command));
+                _printer.Print(GetHelp(command));
             }
             else if (BasicCommandList.commandSetWallpaper.Contains(command.Value))
             {
@@ -92,16 +103,33 @@ namespace WeirdWallpaperGenerator.Controllers
                 // for random method
                 if (methodFlag == null)
                 {
-                    // TODO: make it real random
-                    methodFlag = new Flag { Value = "m", Arguments = new List<Argument>() { new Argument { Value = "mb" } } };
+                    int decision = _rnd.Next(0, 2);
+                    switch (decision)
+                    {
+                        case 0:
+                            methodFlag = new Flag { Value = "m", Arguments = new List<Argument>() { new Argument { Value = "mb" } } };
+                            _printer.Print($"Math billiards method was randomly choosen");
+                            break;
+                        case 1:
+                            methodFlag = new Flag { Value = "m", Arguments = new List<Argument>() { new Argument { Value = "cn" } } };
+                            _printer.Print($"Chaos noise method was randomly choosen");
+                            break;
+                    }
                 }
 
-                // for MathBilliardsDrawer
                 if (methodFlag.IsValue(_mathBilliardConfigurer.methods))
                 {
                     MathBilliardsDrawer drawer = _mathBilliardConfigurer.Configure(command);
                     GenerateWallpaper(
                         drawer, 
+                        command.ContainsFlag(flagShow),
+                        command.ContainsFlag(flagOpen));
+                }
+                else if (methodFlag.IsValue(_chaosNoiseConfigurer.methods))
+                {
+                    ChaosNoiseDrawer drawer = _chaosNoiseConfigurer.Configure(command);
+                    GenerateWallpaper(
+                        drawer,
                         command.ContainsFlag(flagShow),
                         command.ContainsFlag(flagOpen));
                 }
@@ -115,13 +143,11 @@ namespace WeirdWallpaperGenerator.Controllers
             else if (BasicCommandList.commandUpdate.Contains(command.Value))
             {
                 var context = ContextConfig.GetInstance();
-                // if update didn't start automatically
-                if (context.UpdaterSettings.AutoCheckUpdates == false)
-                {
-                    await _updateService.CheckUpdates(isManual: true);
-                    await _updateService.CheckUpdateBeforeExit(isManual: true);
-                    context.ShouldUpdateOnExit = false;
-                }
+
+                await _updateService.CheckUpdates(isManual: true);
+                await _updateService.CheckUpdateBeforeExit(isManual: true);
+                context.ShouldUpdateOnExit = false;
+                
             }
             // TODO: else if another possible commands
 
@@ -137,8 +163,12 @@ namespace WeirdWallpaperGenerator.Controllers
             else
             {
                 throw ExceptionHelper.GetException(nameof(MainController), nameof(ExecuteCommand),
-                       $"Unknown command specified. Type ? to find out about available commands");
+                       $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about avaible commands. " +
+                       $"Type WeirdWallpaperGenerator.exe /g -o for fast result if you don't want to " +
+                       $"get into the syntax");
             }
+
+            await _updateService.CheckUpdateBeforeExit();
         }
 
         /// <summary>
@@ -156,7 +186,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 ContextConfig.GetInstance().EnvironmentSettings.SaveFolderPath);
             Directory.CreateDirectory(folderPath);
             string path = Path.GetFullPath(Path.Combine(folderPath, title));
-            
+
             background.Save(path);
 
             _printer.PrintSuccess("Wallpaper has been generated!");
@@ -187,7 +217,7 @@ namespace WeirdWallpaperGenerator.Controllers
                 !_commandService.IsKnownCommand(command))
             {
                 throw ExceptionHelper.GetException(nameof(MainController), nameof(GetHelp),
-                       $"Unknown command specified. Type ? to find out about available commands");
+                       $"Unknown command specified. Type {BasicCommandList.commandHelp.First()} to find out about available commands");
             }
 
             string helpFor = string.Empty;
@@ -214,9 +244,9 @@ namespace WeirdWallpaperGenerator.Controllers
             }
             else
             {
-                if (helpFor == about)
+                if (BasicCommandList.commandAbout.Contains(helpFor))
                 {
-                    return $"{about}: {DescriptionHelper.GetDescription<MainController>(nameof(about))}";
+                    return $"{BasicCommandList.commandAbout[0]}: {DescriptionHelper.GetDescription<BasicCommandList>(nameof(BasicCommandList.commandAbout))}";
                 }
 
                 else if (BasicCommandList.commandGenerate.Contains(helpFor[1..])) 
@@ -257,6 +287,10 @@ namespace WeirdWallpaperGenerator.Controllers
                     {
                         return _mathBilliardConfigurer.GetHelp(command);
                     }
+                    else if (_chaosNoiseConfigurer.methods.Contains(method))
+                    {
+                        return _chaosNoiseConfigurer.GetHelp(command);
+                    }
                     // TODO: else if for another methods
                     else
                     {
@@ -281,7 +315,7 @@ namespace WeirdWallpaperGenerator.Controllers
             var about = ContextConfig.GetInstance().About;
             return  $"{about.ProjectName}\n" +
                     $"version: {about.Version}\n" +
-                    $"release date: {about.ReleaseDate}\n" +
+                    $"release date: {about.ReleaseDate:dd/MM/yyyy}\n" +
                     $"author: {about.Author}";
         }
     }
